@@ -49,10 +49,10 @@ struct WallView:View {
         VStack(alignment:.leading,spacing:6){
             if post.authorId != user.id {Text(post.name).font(.caption.bold())}
             Text(post.body).fixedSize(horizontal:false,vertical:true)
-            HStack{Text(Date(timeIntervalSince1970:Double(post.createdAt)/1000),style:.time);Text(t("Local only"))}.font(.caption2).foregroundStyle(.secondary)
+            HStack{Text(Date(timeIntervalSince1970:Double(post.createdAt)/1000),style:.time);Image(systemName:"clock").accessibilityLabel(t("Local only"))}.font(.caption2).foregroundStyle(.secondary)
             HStack(spacing:12){
                 Button{act("like","",post.id)}label:{Label(String(post.likes),systemImage:post.liked ? "heart.fill":"heart").frame(minHeight:44)}
-                Button{if expanded.contains(post.id){expanded.remove(post.id)}else{expanded.insert(post.id)}}label:{Label(t("Comments")+" ("+String(post.comments.count)+")",systemImage:"bubble.left").frame(minHeight:44)}
+                Button{if expanded.contains(post.id){expanded.remove(post.id)}else{expanded.insert(post.id)}}label:{Label(String(post.comments.count),systemImage:"bubble.left").accessibilityLabel(t("Comments")+" "+String(post.comments.count)).frame(minHeight:44)}
             }.font(.caption).buttonStyle(.borderless)
             if expanded.contains(post.id){
                 ForEach(post.comments){comment in VStack(alignment:.leading){Text(comment.name).font(.caption.bold());Text(comment.body)}.padding(8).frame(maxWidth:.infinity,alignment:.leading).background(.background,in:RoundedRectangle(cornerRadius:8))}
@@ -61,7 +61,7 @@ struct WallView:View {
                     Button(t("Send")){act("comment",comments[post.id] ?? "",post.id)}.disabled((comments[post.id] ?? "").trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || (comments[post.id] ?? "").count>500)
                 }
             }
-        }.padding(12).frame(maxWidth:post.body.count>180 || expanded.contains(post.id) ? 600:420,alignment:.leading).background(.thinMaterial,in:RoundedRectangle(cornerRadius:12)).frame(maxWidth:.infinity,alignment:post.authorId==user.id ? .trailing:.leading)
+        }.padding(8).frame(maxWidth:post.body.count>180 || expanded.contains(post.id) ? 600:420,alignment:.leading).background(.thinMaterial,in:RoundedRectangle(cornerRadius:12)).frame(maxWidth:.infinity,alignment:post.authorId==user.id ? .trailing:.leading)
     }
     private func reload(){do{posts=try db.feed(user,channel);messages=try db.spaceMessages(user,channel)}catch{failed=true}}
     private func act(_ action:String,_ body:String,_ id:String=""){do{if action=="chat"{try db.sendSpaceMessage(user,channel,body)}else{try db.wallAction(user,channel,action,body,id)};reload();if action=="post" || action=="chat"{text=""};if action=="comment"{comments[id]=""}}catch{failed=true}}

@@ -114,6 +114,7 @@ class MainActivity:ComponentActivity(){
     var selected by rememberSaveable(user.id){mutableStateOf("")}
     var opened by rememberSaveable(user.id){mutableStateOf(false)}
     var groupOpen by remember(selected,tab){mutableStateOf(false)}
+    var familyPolicy by rememberSaveable(user.id){mutableStateOf(false)}
     val chatState=rememberSaveableStateHolder()
     var error by remember{mutableStateOf(false)}
     var busy by remember{mutableStateOf(false)}
@@ -187,6 +188,11 @@ class MainActivity:ComponentActivity(){
                     FamilyFeatures(db,user,"Profile"){points=db.points(user)}
                     TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}
 
+                    }
+                    else if(tab=="FamilyControls")Column(Modifier.weight(1f).fillMaxWidth()){
+                        val parent=user.roles.split(" + ").contains("Parent")
+                        if(parent)Row(Modifier.fillMaxWidth()){TextButton(onClick={familyPolicy=false},modifier=Modifier.weight(1f)){Text("Relationships",fontWeight=if(!familyPolicy)FontWeight.Bold else FontWeight.Normal)};TextButton(onClick={familyPolicy=true},modifier=Modifier.weight(1f)){Text("Access controls",fontWeight=if(familyPolicy)FontWeight.Bold else FontWeight.Normal)}}
+                        if(parent&&familyPolicy)ModulePreview(module,db,user,record,Modifier.weight(1f))else Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(12.dp)){FamilyFeatures(db,user,"Family"){points=db.points(user)}}
                     }
                     else if(tab=="Rewards"||tab=="Quiz")key(tab){Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp)){FamilyFeatures(db,user,tab){points=db.points(user)}}}
                     else key(tab,record){ModulePreview(module,db,user,record,Modifier.weight(1f))}

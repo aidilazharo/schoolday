@@ -40,6 +40,7 @@ listOf("activity","Activity log","",""),
 listOf("safety","Report & moderation","Member or message reference;Reason","Submit report"),
 listOf("archive","Archive group","Reason","Archive group"),
 listOf("leave","Leave group","Reason (optional)","Leave group"))
+private val groupCategories=listOf(listOf("Information","info","rules","notifications"),listOf("Members","members","invite","roles"),listOf("Governance","election","recall","polls"),listOf("Shared resources","announcements","files","notes","search"),listOf("Group activities","calls","events","tasks","quizzes","attendance","certificates"),listOf("Safety & administration","permissions","activity","safety","archive","leave"))
 private val groupPolicies=mapOf("open" to "Community election with independent safety oversight","secondary" to "Institution-appointed administrator","school" to "Institution-appointed administrator","class" to "Assigned educator; representatives may be elected","staff" to "Institution-appointed administrator","family" to "Verified family permissions","admin" to "Institution-appointed administrator","university" to "Institution-appointed administrator","uni-course" to "Assigned lecturer; representatives may be elected")
 private val groupPermissions=listOf("Send messages","Invite members","Edit group information","Remove members","Create polls","Start group video call")
 private val groupActions=listOf("Remove member","Ban member","Temporarily mute","Assign moderator","Restore membership")
@@ -60,7 +61,9 @@ private val groupActions=listOf("Remove member","Ban member","Temporarily mute",
  var candidate by remember(channel){mutableStateOf("")}
  var voted by remember(channel){mutableStateOf(false)}
  fun choose(id:String){section=id;values.clear();target="";search="";candidate="";voted=false}
- val active=groupSections.firstOrNull{it[0]==section}
+ val allowed=groupSections.filter{(it[0]!="recall"||channel=="open")&&(it[0]!="election"||channel in listOf("open","class","uni-course"))}
+ val expandedGroups=remember(channel){mutableStateMapOf<String,Boolean>()}
+ val active=allowed.firstOrNull{it[0]==section}
  LaunchedEffect(channel,user.id){try{members=withContext(Dispatchers.IO){db.rows("SELECT u.id,u.name,COALESCE((SELECT group_concat(r.role,' + ') FROM roles r WHERE r.user_id=u.id),'Member'),CASE WHEN d.age>=18 THEN '1' ELSE '0' END FROM memberships m JOIN users u ON u.id=m.user_id LEFT JOIN demographics d ON d.user_id=u.id WHERE m.channel_id=? AND EXISTS(SELECT 1 FROM memberships access WHERE access.user_id=? AND access.channel_id=m.channel_id) ORDER BY u.name,u.id",channel,user.id)}}catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){failed=true}}
  Column(modifier.fillMaxWidth().background(Color.White)){
   Row(Modifier.fillMaxWidth().padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(groupSettingsLabel(lang),fontWeight=FontWeight.Bold);Text(title+" · "+members.size+" members",style=MaterialTheme.typography.labelSmall)};TextButton(onClick=onClose){Text(SchooldayLanguage.text("Back",lang))}}
@@ -73,7 +76,7 @@ private val groupActions=listOf("Remove member","Ban member","Temporarily mute",
     if(split||section.isEmpty()){
      LazyColumn(if(split)Modifier.width(menuWidth).fillMaxHeight() else Modifier.fillMaxSize()){
       item{Column(Modifier.padding(12.dp)){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){GroupAvatar(channel,title,56.dp);Text(title,fontWeight=FontWeight.Bold)};Text(groupPolicies[channel]?:"Institution or group policy determines authority",style=MaterialTheme.typography.labelSmall)}}
-      items(groupSections,key={it[0]}){r->Column{if(r[0]!="members")HorizontalDivider(thickness=2.dp,color=Color(0xFFC62828));TextButton(onClick={choose(r[0])},modifier=Modifier.fillMaxWidth().background(if(section==r[0])Color(0xFFF0F0F0) else Color.White)){Text(r[1],modifier=Modifier.weight(1f));Text("›")};HorizontalDivider()}}
+      groupCategories.forEach{group->item(key=group[0]){TextButton(onClick={expandedGroups[group[0]]=expandedGroups[group[0]]!=true},modifier=Modifier.fillMaxWidth()){Text(group[0],modifier=Modifier.weight(1f),fontWeight=FontWeight.Bold);Text(if(expandedGroups[group[0]]==true)"−" else "+")}};if(expandedGroups[group[0]]==true)items(allowed.filter{it[0] in group.drop(1)},key={it[0]}){r->Column{if(r[0]!="members")HorizontalDivider(thickness=2.dp,color=Color(0xFFC62828));TextButton(onClick={choose(r[0])},modifier=Modifier.fillMaxWidth().background(if(section==r[0])Color(0xFFF0F0F0) else Color.White)){Text(r[1],modifier=Modifier.weight(1f));Text("›")};HorizontalDivider()}}}
      }
     }
     if(split)VerticalDivider()

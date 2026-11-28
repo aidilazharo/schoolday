@@ -66,6 +66,7 @@ private struct Workspace:View {
     @State private var category="Connect"
     @State private var choosing=false
     @State private var groupOpen=false
+    @State private var familyPolicy=false
     @State private var moduleId="Chats"
     @State private var record=""
     @State private var revision=0
@@ -238,9 +239,19 @@ private struct Workspace:View {
             if module.status != "local"{Text(module.status=="partial" ? "Partially implemented":"Not implemented").font(.caption).foregroundStyle(.red).padding(6)}
             if let kind=kind,staff{if let r=drafts.first(where:{$0[0]==record}){Form{Section(r[1]){Text(r[2]);Text(t("Draft only · Not published")).font(.caption);Button(t("Create draft")){record=""}}}}else{WorkspaceEditor(db:db,user:user,kind:kind,lang:lang,onSaved:{revision+=1}).id(tab)}}
             else if tab=="Profile"{profileView}
+            else if tab=="FamilyControls"{familyWorkspace}
             else if tab=="Rewards" || tab=="Quiz"{Form{FamilyFeatures(db:db,user:user,screen:tab,onChange:refreshPoints)}.id(tab)}
             else{ModulePreview(module:module,db:db,user:user,record:record).id(tab+record)}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
+    }
+    private var familyWorkspace:some View{
+        VStack(spacing:0){
+            if user.roles.components(separatedBy:" + ").contains("Parent"){
+                Picker("Family",selection:$familyPolicy){Text("Relationships").tag(false);Text("Access controls").tag(true)}.pickerStyle(.segmented).padding(8)
+            }
+            if familyPolicy && user.roles.components(separatedBy:" + ").contains("Parent"){ModulePreview(module:module,db:db,user:user,record:record)}
+            else{Form{FamilyFeatures(db:db,user:user,screen:"Family",onChange:refreshPoints)}}
+        }
     }
     private var nicknameMenu:some View {
         VStack(alignment:.leading,spacing:6) {

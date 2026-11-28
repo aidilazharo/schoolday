@@ -149,3 +149,6 @@ form button{background:#171717;color:white;border-radius:10px;padding:10px 16px}
 
 /* Consolidated navigation */
 .context-tools{display:flex;overflow-x:auto;gap:4px;padding:6px;border-bottom:1px solid #eee;scrollbar-width:thin}.context-tools button{flex:none;min-height:44px;padding:6px 10px;border-radius:5px;background:white;color:#333;border-top:2px solid transparent;font-size:12px}.context-tools button.unfinished-module{border-top-color:#c62828}.context-tools button[aria-current=page]{background:#eee;font-weight:700}.account-shortcut{min-width:44px;min-height:44px}.profile-settings>button{margin-top:12px}
+
+/* Compact chat and collapsible group settings. */
+.group-menu-section>summary{padding:13px 14px;font-weight:600;cursor:pointer;border-bottom:1px solid #ddd;min-height:44px}.group-menu-section .group-menu-item{padding-left:22px}.group-menu-item.group-pending{border-top:0;border-left:3px solid #c62828}.unified-feed{gap:6px}.message-bubble{padding:7px 10px}.social-message{min-width:0}.message-actions{border-top:0;margin-top:0;padding-top:0;gap:6px}.message-actions button{min-height:44px;padding:0 6px}.message-actions button:last-child{font-size:13px}

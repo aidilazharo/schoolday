@@ -78,6 +78,7 @@ struct FamilyFeatures:View {
         Group{
             if screen=="Rewards"{rewards}
             if screen=="Profile"{profile}
+            if screen=="Family"{family}
             if screen=="Quiz"{quiz}
             if !feedback.isEmpty{Text(feedback).font(.caption)}
         }.confirmationDialog(pending ?? "",isPresented:Binding(get:{pending != nil},set:{if !$0{pending=nil}}),titleVisibility:.visible){
@@ -103,7 +104,7 @@ struct FamilyFeatures:View {
     private var profile:some View{
         Group{
             Section("Avatar"){
-                Image(systemName:symbols[styles.firstIndex(of:current) ?? 0]).font(.system(size:44))
+                Image(systemName:symbols[styles.firstIndex(of:choice) ?? 0]).font(.system(size:44))
                 Picker("Avatar",selection:$choice){ForEach(styles,id:\.self){style in Label(style,systemImage:symbols[styles.firstIndex(of:style) ?? 0]).tag(style)}}
                 Text("10 points will be deducted. Balance: \(balance)").font(.caption)
                 Button("Save avatar · 10 points"){ask("Deduct 10 points?"){act("avatar","",0,choice)}}.disabled(choice==current || balance<10)
@@ -121,8 +122,13 @@ struct FamilyFeatures:View {
                     VStack(alignment:.leading){Text(r[4]+" · "+r[2]+" · "+r[3]);if r[1]==user.id && r[2]=="friend" && r[3]=="pending"{Button("Accept"){act("accept",r[0])}}}
                 }
             }
+        }
+    }
+    private var family:some View{
+        Group{
+            if kids.isEmpty && rows(FeatureQuery.parents).isEmpty{Text("No linked family members.")}
             if !kids.isEmpty{Section("Linked children"){
-                ForEach(kids,id:\.self){c in VStack(alignment:.leading){Text(c[1]).font(.headline);Text("Age "+c[2]+" · "+c[3]+" points").font(.caption);Toggle("Allow quiz skip · 5 points",isOn:Binding(get:{c[4]=="1"},set:{act("permission",c[0],$0 ? 1:0)}))}}
+                ForEach(kids,id:\.self){c in VStack(alignment:.leading){Text(c[1]).font(.headline);Text("Age "+c[2]+" · "+c[3]+" points · "+(c[0]=="child15" ? "SMK Cyberjaya":"SK Cyberjaya")).font(.caption);if (Int(c[2]) ?? 18)<18{Toggle("Allow quiz skip · 5 points",isOn:Binding(get:{c[4]=="1"},set:{act("permission",c[0],$0 ? 1:0)}))}}}
             }}
             if !rows(FeatureQuery.parents).isEmpty{Section("Linked parents"){ForEach(rows(FeatureQuery.parents),id:\.self){p in Text(p[0])}}}
         }

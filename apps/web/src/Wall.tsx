@@ -29,8 +29,8 @@ export function Wall({db,user,channel,lang,busy,setBusy}:{db:Database;user:User;
  function renderMessage(p:typeof posts[number]){
   const own=p.authorId===user.id,open=!!expanded[p.id],long=p.body.length>180||p.body.includes('\n');
   return <div className={'timeline-message '+(own?'own':'other')} key={p.id}><div className={'message-bubble social-message '+(long||open?'expanded-message':'')}>
-   {!own&&<strong>{p.nickname||p.name}</strong>}<div className="message-body">{p.body}</div><small>{time(p.createdAt)} · {t('Local only')}</small>
-   <div className="message-actions"><button type="button" aria-pressed={!!p.liked} aria-label={t('Like')} disabled={busy} onClick={()=>void act('like','',p.id)}>{p.liked?'♥':'♡'} {p.likes||''}</button><button type="button" aria-expanded={open} onClick={()=>setExpanded(old=>({...old,[p.id]:!open}))}>{t('Comments')} {p.comments.length||''} {open?'▴':'▾'}</button></div>
+   {!own&&<strong>{p.nickname||p.name}</strong>}<div className="message-body">{p.body}</div><small>{time(p.createdAt)} <span title={t('Local only')} aria-label={t('Local only')}>◷</span></small>
+   <div className="message-actions"><button type="button" aria-pressed={!!p.liked} aria-label={t('Like')} disabled={busy} onClick={()=>void act('like','',p.id)}>{p.liked?'♥':'♡'} {p.likes||''}</button><button type="button" aria-label={t("Comments")+" ("+p.comments.length+")"} aria-expanded={open} onClick={()=>setExpanded(old=>({...old,[p.id]:!open}))}><span aria-hidden="true">▢</span> {p.comments.length||''} {open?'▴':'▾'}</button></div>
    {open&&<div className="message-thread">{p.comments.map(c=><div className="wall-comment" key={c.id}><strong>{c.nickname||c.name}</strong><div>{c.body}</div></div>)}<form className="wall-reply" onSubmit={e=>{e.preventDefault();void act('comment',comments[p.id]??'',p.id)}}><input aria-label={t('Comment')} placeholder={t('Comment')} maxLength={500} value={comments[p.id]??''} onChange={e=>setComments(old=>({...old,[p.id]:e.target.value}))}/><button disabled={busy||!comments[p.id]?.trim()}>{t('Send')}</button></form></div>}
   </div></div>
  }

@@ -26,13 +26,13 @@ try{
   await noOverflow(page,name);await page.screenshot({path:'responsive-screenshots/'+name+'-chat.png'});
   await page.locator('.group-settings-toggle:visible').click();
   await page.locator('.group-settings').waitFor({state:'visible'});
-  await page.locator('[data-group-section=members]').click();
+  await page.locator('.group-menu-section summary').filter({hasText:'Members'}).click();await page.locator('[data-group-section=members]').click();
   assert.ok(await page.locator('.group-member').count()>0,name+' roster missing');
   await page.getByLabel('Search members').fill('no matching sample xyz');
   assert.equal(await page.locator('.group-member').count(),0);
   await page.getByLabel('Search members').fill('');
   if(await page.locator('.group-menu-back').isVisible())await page.locator('.group-menu-back').click();
-  await page.locator('[data-group-section=election]').click();
+  await page.locator('.group-menu-section summary').filter({hasText:'Governance'}).click();await page.locator('[data-group-section=election]').click();
   assert.equal(await page.locator('.group-disabled').isDisabled(),true);
   const ballot=page.locator('input[name=demo-candidate]').first();
   if(await ballot.count()){await ballot.check();await page.getByRole('button',{name:'Submit preview vote'}).click();assert.ok(await page.getByRole('button',{name:'Preview vote recorded'}).isDisabled());}

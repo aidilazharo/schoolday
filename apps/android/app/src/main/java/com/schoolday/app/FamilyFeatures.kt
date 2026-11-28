@@ -86,7 +86,7 @@ private object FeatureQuery {
   Text("Activity",style=MaterialTheme.typography.titleMedium);rows(FeatureQuery.activity).forEach{r->Text(r[0]+" · "+r[1])}
  }
  if(screen=="Profile"){
-  Text("Avatar",style=MaterialTheme.typography.titleMedium);Text(icons[styles.indexOf(current).coerceAtLeast(0)],style=MaterialTheme.typography.headlineLarge)
+  Text("Avatar",style=MaterialTheme.typography.titleMedium);Text(icons[styles.indexOf(choice).coerceAtLeast(0)],style=MaterialTheme.typography.headlineLarge)
   FeaturePicker("Avatar",styles.mapIndexed{j,v->v to icons[j]},choice,{choice=it})
   Text("10 points will be deducted. Balance: "+balance)
   Button(onClick={ask("Deduct 10 points?"){act("avatar","",0,choice)}},enabled=!busy&&choice!=current&&balance>=10){Text("Save avatar · 10 points")}
@@ -99,7 +99,10 @@ private object FeatureQuery {
   Button(onClick={val prefix="schoolday:identity:v1:";val value=code.trim().removePrefix(prefix);val target=if(code.trim().startsWith(prefix))rows(FeatureQuery.resolve,value).firstOrNull()?.firstOrNull() else null;if(target==null)feedback="Unknown identity" else act(purpose,target,0,value)},enabled=!busy&&code.isNotBlank()){Text("Continue")}
   Text("Parent requests require verification. Staff-only attendance is a demo.")
   rows(FeatureQuery.requests,user.id,user.id,user.id).forEach{r->Text(r[4]+" · "+r[2]+" · "+r[3]);if(r[1]==user.id&&r[2]=="friend"&&r[3]=="pending")Button(onClick={act("accept",r[0])},enabled=!busy){Text("Accept")}}
-  if(kids.isNotEmpty()){HorizontalDivider();Text("Linked children",style=MaterialTheme.typography.titleMedium);kids.forEach{c->Text(c[1]);Text("Age "+c[2]+" · "+c[3]+" points");Row{Checkbox(checked=c[4]=="1",onCheckedChange={act("permission",c[0],if(it)1 else 0)},enabled=!busy);Text("Allow quiz skip · 5 points",modifier=Modifier.padding(top=12.dp))}}}
+ }
+ if(screen=="Family"){
+  if(kids.isEmpty()&&rows(FeatureQuery.parents).isEmpty())Text("No linked family members.")
+  if(kids.isNotEmpty()){HorizontalDivider();Text("Linked children",style=MaterialTheme.typography.titleMedium);kids.forEach{c->Text(c[1]);Text("Age "+c[2]+" · "+c[3]+" points · "+(if(c[0]=="child15")"SMK Cyberjaya" else "SK Cyberjaya"));if((c[2].toIntOrNull()?:18)<18)Row{Checkbox(checked=c[4]=="1",onCheckedChange={act("permission",c[0],if(it)1 else 0)},enabled=!busy);Text("Allow quiz skip · 5 points",modifier=Modifier.padding(top=12.dp))}}}
   val parents=rows(FeatureQuery.parents);if(parents.isNotEmpty()){Text("Linked parents",style=MaterialTheme.typography.titleMedium);parents.forEach{Text(it[0])}}
  }
  if(screen=="Quiz"){

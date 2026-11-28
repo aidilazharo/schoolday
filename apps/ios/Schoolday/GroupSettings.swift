@@ -44,7 +44,9 @@ struct GroupSettings:View{
  @State private var candidate=""
  @State private var voted=false
  @State private var failed=false
- private var active:[String]?{sections.first{$0[0]==section}}
+ private let groups:[[String]]=[["Information","info","rules","notifications"],["Members","members","invite","roles"],["Governance","election","recall","polls"],["Shared resources","announcements","files","notes","search"],["Group activities","calls","events","tasks","quizzes","attendance","certificates"],["Safety & administration","permissions","activity","safety","archive","leave"]]
+ private var allowed:[[String]]{sections.filter{($0[0] != "recall" || channel=="open") && ($0[0] != "election" || ["open","class","uni-course"].contains(channel))}}
+ private var active:[String]?{allowed.first{$0[0]==section}}
  private func t(_ key:String)->String{SchooldayLanguage.text(key,lang)}
  private func choose(_ id:String){section=id;values=[:];target="";search="";candidate="";voted=false}
  var body:some View{
@@ -65,9 +67,11 @@ struct GroupSettings:View{
   ScrollView{LazyVStack(alignment:.leading,spacing:0){
    HStack{GroupAvatar(channel:channel,title:title,size:56);Text(title).font(.headline)}.padding(12)
    Text(policies[channel] ?? "Institution or group policy determines authority").font(.caption).padding(.horizontal,12).padding(.bottom,12)
-   ForEach(sections,id:\.self){r in
+   ForEach(groups,id:\.self){group in
+    DisclosureGroup(group[0]){ForEach(allowed.filter{group.dropFirst().contains($0[0])},id:\.self){r in
     Button{choose(r[0])}label:{HStack{Text(r[1]);Spacer();Image(systemName:"chevron.right").font(.caption)}.padding(12).frame(minHeight:48).background(section==r[0] ? Color.primary.opacity(0.07):Color.clear).overlay(alignment:.top){if r[0] != "members"{Rectangle().fill(.red).frame(height:2)}}}.buttonStyle(.plain)
     Divider()
+   }}.padding(.horizontal,8)
    }
   }}
  }

@@ -34,7 +34,7 @@ private data class TimelineEntry(val id:String,val time:Long,val post:WallPost?=
  val listState=rememberLazyListState()
  LaunchedEffect(entries.size){if(entries.isNotEmpty())listState.scrollToItem(entries.lastIndex)}
  Column(modifier.fillMaxWidth()){
- LazyColumn(Modifier.weight(1f).fillMaxWidth(),state=listState,contentPadding=PaddingValues(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
+ LazyColumn(Modifier.weight(1f).fillMaxWidth(),state=listState,contentPadding=PaddingValues(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){
   items(entries,key={it.id}){entry->
    val message=entry.message
    val post=entry.post
@@ -51,13 +51,13 @@ private data class TimelineEntry(val id:String,val time:Long,val post:WallPost?=
    }else if(post!=null){
    Row(Modifier.fillMaxWidth(),horizontalArrangement=if(post.authorId==user.id)Arrangement.End else Arrangement.Start){
     Surface(shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.surfaceVariant){
-     Column(Modifier.widthIn(max=if(post.body.length>180||expanded[post.id]==true)600.dp else 420.dp).padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){
+     Column(Modifier.widthIn(max=if(post.body.length>180||expanded[post.id]==true)600.dp else 420.dp).padding(8.dp),verticalArrangement=Arrangement.spacedBy(2.dp)){
       if(post.authorId!=user.id)Text(post.name,fontWeight=FontWeight.Bold,style=MaterialTheme.typography.labelMedium)
       Text(post.body)
-      Text(java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(post.createdAt))+" · "+t("Local only"),style=MaterialTheme.typography.labelSmall)
+      Text(java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(post.createdAt))+" · ◷",style=MaterialTheme.typography.labelSmall)
       Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
        TextButton(onClick={act("like","",post.id)},enabled=!busy){Text((if(post.liked)"♥ " else "♡ ")+post.likes)}
-       TextButton(onClick={expanded[post.id]=expanded[post.id]!=true}){Text(t("Comments")+" ("+post.comments.size+")")}
+       TextButton(onClick={expanded[post.id]=expanded[post.id]!=true}){Text("▢ "+post.comments.size)}
       }
       if(expanded[post.id]==true){
        post.comments.forEach{comment->Surface(shape=RoundedCornerShape(8.dp)){Column(Modifier.padding(8.dp)){Text(comment.name,fontWeight=FontWeight.Bold);Text(comment.body)}}}
