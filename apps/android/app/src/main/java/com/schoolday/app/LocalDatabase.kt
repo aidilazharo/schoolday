@@ -9,7 +9,7 @@ import javax.crypto.spec.PBEKeySpec
 data class Account(val id:String,val name:String,val email:String,val roles:String)
 data class ChatSpace(val id:String,val title:String)
 data class Draft(val id:String,val text:String)
-class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,1){
+class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,2){
     override fun onConfigure(db:SQLiteDatabase){db.setForeignKeyConstraintsEnabled(true)}
     override fun onCreate(db:SQLiteDatabase){
         val schema = """
@@ -61,8 +61,21 @@ INSERT OR IGNORE INTO roles VALUES ('normal','Member');
 INSERT OR IGNORE INTO memberships VALUES ('normal','open');
         """.trimIndent()
         schema.split(";").map{it.trim()}.filter{it.isNotEmpty()&&!it.startsWith("PRAGMA")}.forEach{db.execSQL(it)}
+        migrateNames(db)
     }
-    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){error("Migration required")}
+    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db)}
+    private fun migrateNames(db:SQLiteDatabase){
+        val migration="""
+CREATE TABLE IF NOT EXISTS user_nicknames(user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,nickname TEXT NOT NULL CHECK(length(trim(nickname))>0));
+UPDATE users SET name='Muhammad Aiman Hakim' WHERE id='student' AND name='Aiman';
+UPDATE users SET name='Nur Sara Amira' WHERE id='teacher' AND name='Cikgu Sara';
+UPDATE users SET name='Ahmad Farid Rahman' WHERE id='parent' AND name='Encik Farid';
+UPDATE users SET name='Nur Nadia Sofia' WHERE id='dual' AND name='Puan Nadia';
+UPDATE users SET name='Lee Wei Ming' WHERE id='admin' AND name='School Admin';
+UPDATE users SET name='Kavitha Devi' WHERE id='normal' AND name='Normal User';
+        """.trimIndent()
+        migration.split(";").map{it.trim()}.filter{it.isNotEmpty()}.forEach{db.execSQL(it)}
+    }
     private fun rows(sql:String,vararg args:String):List<List<String>> = readableDatabase.rawQuery(sql,args).use{cursor->
         buildList{while(cursor.moveToNext())add((0 until cursor.columnCount).map{cursor.getString(it)?:""})}
     }
@@ -74,6 +87,16 @@ INSERT OR IGNORE INTO memberships VALUES ('normal','open');
         val spec=PBEKeySpec(password.toCharArray(),salt,600000,256)
         val hash=try{SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).encoded.joinToString(""){ "%02x".format(it.toInt() and 255) }}finally{spec.clearPassword()}
         return if(hash==row[2])rows(users+" WHERE id=?",row[0]).firstOrNull()?.let{Account(it[0],it[1],it[2],it[3])}else null
+    }
+    fun nickname(user:Account):String{
+        val options=SchooldayNames.options(user.name)
+        val saved=rows("SELECT nickname FROM user_nicknames WHERE user_id=?",user.id).firstOrNull()?.firstOrNull()
+        return saved?.takeIf{it in options}?:options.firstOrNull()?:user.name
+    }
+    fun saveNickname(user:Account,value:String){
+        val name=rows("SELECT name FROM users WHERE id=?",user.id).firstOrNull()?.firstOrNull()?:error("Account missing")
+        require(value in SchooldayNames.options(name))
+        writableDatabase.execSQL("INSERT OR REPLACE INTO user_nicknames VALUES(?,?)",arrayOf(user.id,value))
     }
     fun spaces(user:Account)=rows("SELECT c.id,c.title FROM channels c JOIN memberships m ON m.channel_id=c.id WHERE m.user_id=? ORDER BY c.position",user.id).map{ChatSpace(it[0],it[1])}
     fun drafts(user:Account,channel:String)=rows("SELECT id,body FROM drafts WHERE user_id=? AND channel_id=? ORDER BY created_at,id",user.id,channel).map{Draft(it[0],it[1])}

@@ -60,6 +60,13 @@ INSERT OR IGNORE INTO memberships VALUES ('admin','admin');
 INSERT OR IGNORE INTO users VALUES ('normal','Normal User','member@example.invalid',0,'7b3a762d993c1ae5645c8922c2b73af0','d0e7d639ac57271cad1b068ce5b6292386493ab34b24b263f71eb434e007ad87');
 INSERT OR IGNORE INTO roles VALUES ('normal','Member');
 INSERT OR IGNORE INTO memberships VALUES ('normal','open');
+CREATE TABLE IF NOT EXISTS user_nicknames(user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,nickname TEXT NOT NULL CHECK(length(trim(nickname))>0));
+UPDATE users SET name='Muhammad Aiman Hakim' WHERE id='student' AND name='Aiman';
+UPDATE users SET name='Nur Sara Amira' WHERE id='teacher' AND name='Cikgu Sara';
+UPDATE users SET name='Ahmad Farid Rahman' WHERE id='parent' AND name='Encik Farid';
+UPDATE users SET name='Nur Nadia Sofia' WHERE id='dual' AND name='Puan Nadia';
+UPDATE users SET name='Lee Wei Ming' WHERE id='admin' AND name='School Admin';
+UPDATE users SET name='Kavitha Devi' WHERE id='normal' AND name='Normal User';
 """
         guard sqlite3_exec(db, schema, nil, nil, nil) == SQLITE_OK else { sqlite3_close(db); db=nil; throw Failure.database }
     }
@@ -93,6 +100,16 @@ INSERT OR IGNORE INTO memberships VALUES ('normal','open');
         }}}
         guard code==kCCSuccess,hash.map({String(format:"%02x",$0)}).joined()==row[2] else {return nil}
         return try query(users+" WHERE id=?",[row[0]]).first.map {Account(id:$0[0],name:$0[1],email:$0[2],roles:$0[3])}
+    }
+    func nickname(_ user:Account) throws -> String {
+        let options=SchooldayNames.options(user.name)
+        let saved=try query("SELECT nickname FROM user_nicknames WHERE user_id=?",[user.id]).first?.first
+        if let saved=saved,options.contains(saved){return saved}
+        return options.first ?? user.name
+    }
+    func saveNickname(_ user:Account,_ value:String) throws {
+        guard let name=try query("SELECT name FROM users WHERE id=?",[user.id]).first?.first,SchooldayNames.options(name).contains(value) else {throw Failure.database}
+        _=try query("INSERT OR REPLACE INTO user_nicknames VALUES(?,?)",[user.id,value])
     }
     func spaces(_ user:Account) throws -> [ChatSpace] { try query("SELECT c.id,c.title FROM channels c JOIN memberships m ON m.channel_id=c.id WHERE m.user_id=? ORDER BY c.position",[user.id]).map { ChatSpace(id:$0[0],title:$0[1]) } }
     func drafts(_ user:Account,_ channel:String) throws -> [LocalDraft] { try query("SELECT id,body FROM drafts WHERE user_id=? AND channel_id=? ORDER BY created_at,id",[user.id,channel]).map {LocalDraft(id:$0[0],text:$0[1])} }

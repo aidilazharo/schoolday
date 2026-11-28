@@ -57,7 +57,10 @@ object SchooldayLanguage {
 "School Administration" to "School Administration",
 "Country / region" to "Country / region",
 "Search country / region" to "Search country / region",
-"Done" to "Done"),
+"Done" to "Done",
+"Full name" to "Full name",
+"Nickname" to "Nickname",
+"Choose one or two parts of your full name." to "Choose one or two parts of your full name."),
 "ms" to mapOf("Language" to "Bahasa",
 "Sign in" to "Log masuk",
 "Sample user" to "Pengguna contoh",
@@ -108,7 +111,10 @@ object SchooldayLanguage {
 "School Administration" to "Pentadbiran sekolah",
 "Country / region" to "Negara / wilayah",
 "Search country / region" to "Cari negara / wilayah",
-"Done" to "Selesai"),
+"Done" to "Selesai",
+"Full name" to "Nama penuh",
+"Nickname" to "Nama panggilan",
+"Choose one or two parts of your full name." to "Pilih satu atau dua bahagian daripada nama penuh anda."),
 "zh" to mapOf("Language" to "语言",
 "Sign in" to "登录",
 "Sample user" to "示例用户",
@@ -159,7 +165,10 @@ object SchooldayLanguage {
 "School Administration" to "学校行政",
 "Country / region" to "国家／地区",
 "Search country / region" to "搜索国家／地区",
-"Done" to "完成"),
+"Done" to "完成",
+"Full name" to "全名",
+"Nickname" to "昵称",
+"Choose one or two parts of your full name." to "从全名中选择一个或两个部分。"),
 "ta" to mapOf("Language" to "மொழி",
 "Sign in" to "உள்நுழைக",
 "Sample user" to "மாதிரி பயனர்",
@@ -210,7 +219,10 @@ object SchooldayLanguage {
 "School Administration" to "பள்ளி நிர்வாகம்",
 "Country / region" to "நாடு / பிராந்தியம்",
 "Search country / region" to "நாடு / பிராந்தியத்தைத் தேடுக",
-"Done" to "முடிந்தது"))
+"Done" to "முடிந்தது",
+"Full name" to "முழுப் பெயர்",
+"Nickname" to "புனைப்பெயர்",
+"Choose one or two parts of your full name." to "உங்கள் முழுப் பெயரிலிருந்து ஒன்று அல்லது இரண்டு பகுதிகளைத் தேர்ந்தெடுக்கவும்."))
     fun text(key:String,lang:String)=strings[lang]?.get(key)?:key
     fun roles(value:String,lang:String)=value.split(" + ").joinToString(" + "){text(it,lang)}
     fun normalize(value:String?)=if(options.any{it.first==value}) value!! else "ms"

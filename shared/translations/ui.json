@@ -50,7 +50,10 @@
     "School Administration": "School Administration",
     "Country / region": "Country / region",
     "Search country / region": "Search country / region",
-    "Done": "Done"
+    "Done": "Done",
+    "Full name": "Full name",
+    "Nickname": "Nickname",
+    "Choose one or two parts of your full name.": "Choose one or two parts of your full name."
   },
   "ms": {
     "Language": "Bahasa",
@@ -103,7 +106,10 @@
     "School Administration": "Pentadbiran sekolah",
     "Country / region": "Negara / wilayah",
     "Search country / region": "Cari negara / wilayah",
-    "Done": "Selesai"
+    "Done": "Selesai",
+    "Full name": "Nama penuh",
+    "Nickname": "Nama panggilan",
+    "Choose one or two parts of your full name.": "Pilih satu atau dua bahagian daripada nama penuh anda."
   },
   "zh": {
     "Language": "语言",
@@ -156,7 +162,10 @@
     "School Administration": "学校行政",
     "Country / region": "国家／地区",
     "Search country / region": "搜索国家／地区",
-    "Done": "完成"
+    "Done": "完成",
+    "Full name": "全名",
+    "Nickname": "昵称",
+    "Choose one or two parts of your full name.": "从全名中选择一个或两个部分。"
   },
   "ta": {
     "Language": "மொழி",
@@ -209,6 +218,9 @@
     "School Administration": "பள்ளி நிர்வாகம்",
     "Country / region": "நாடு / பிராந்தியம்",
     "Search country / region": "நாடு / பிராந்தியத்தைத் தேடுக",
-    "Done": "முடிந்தது"
+    "Done": "முடிந்தது",
+    "Full name": "முழுப் பெயர்",
+    "Nickname": "புனைப்பெயர்",
+    "Choose one or two parts of your full name.": "உங்கள் முழுப் பெயரிலிருந்து ஒன்று அல்லது இரண்டு பகுதிகளைத் தேர்ந்தெடுக்கவும்."
   }
 }

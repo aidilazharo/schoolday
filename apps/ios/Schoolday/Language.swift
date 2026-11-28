@@ -52,7 +52,10 @@ enum SchooldayLanguage {
 "School Administration":"School Administration",
 "Country / region":"Country / region",
 "Search country / region":"Search country / region",
-"Done":"Done"],
+"Done":"Done",
+"Full name":"Full name",
+"Nickname":"Nickname",
+"Choose one or two parts of your full name.":"Choose one or two parts of your full name."],
 "ms": ["Language":"Bahasa",
 "Sign in":"Log masuk",
 "Sample user":"Pengguna contoh",
@@ -103,7 +106,10 @@ enum SchooldayLanguage {
 "School Administration":"Pentadbiran sekolah",
 "Country / region":"Negara / wilayah",
 "Search country / region":"Cari negara / wilayah",
-"Done":"Selesai"],
+"Done":"Selesai",
+"Full name":"Nama penuh",
+"Nickname":"Nama panggilan",
+"Choose one or two parts of your full name.":"Pilih satu atau dua bahagian daripada nama penuh anda."],
 "zh": ["Language":"语言",
 "Sign in":"登录",
 "Sample user":"示例用户",
@@ -154,7 +160,10 @@ enum SchooldayLanguage {
 "School Administration":"学校行政",
 "Country / region":"国家／地区",
 "Search country / region":"搜索国家／地区",
-"Done":"完成"],
+"Done":"完成",
+"Full name":"全名",
+"Nickname":"昵称",
+"Choose one or two parts of your full name.":"从全名中选择一个或两个部分。"],
 "ta": ["Language":"மொழி",
 "Sign in":"உள்நுழைக",
 "Sample user":"மாதிரி பயனர்",
@@ -205,7 +214,10 @@ enum SchooldayLanguage {
 "School Administration":"பள்ளி நிர்வாகம்",
 "Country / region":"நாடு / பிராந்தியம்",
 "Search country / region":"நாடு / பிராந்தியத்தைத் தேடுக",
-"Done":"முடிந்தது"]]
+"Done":"முடிந்தது",
+"Full name":"முழுப் பெயர்",
+"Nickname":"புனைப்பெயர்",
+"Choose one or two parts of your full name.":"உங்கள் முழுப் பெயரிலிருந்து ஒன்று அல்லது இரண்டு பகுதிகளைத் தேர்ந்தெடுக்கவும்."]]
     static func text(_ key:String,_ lang:String)->String {strings[lang]?[key] ?? key}
     static func roles(_ value:String,_ lang:String)->String {value.components(separatedBy:" + ").map{text($0,lang)}.joined(separator:" + ")}
 }

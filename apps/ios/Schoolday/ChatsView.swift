@@ -61,6 +61,7 @@ private struct Workspace:View {
     @AppStorage private var lang:String
     @AppStorage private var country:String
     @State private var showProfile=false
+    @State private var displayName=""
     init(db:LocalDatabase,user:Account,logout:@escaping ()->Void){
         self.db=db;self.user=user;self.logout=logout
         _lang=AppStorage(wrappedValue:"ms","schoolday.language."+user.id)
@@ -84,7 +85,7 @@ private struct Workspace:View {
                 if wide || opened{chat(wide:wide)}
             }
         }.task{
-            do {spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
+            do {displayName=try db.nickname(user);spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
         }.confirmationDialog(t("Clear local drafts?"),isPresented:$confirm){Button(t("Clear"),role:.destructive){change(nil)}}
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
         .sheet(isPresented:$showProfile){profileView}
@@ -93,7 +94,7 @@ private struct Workspace:View {
         VStack(alignment:.leading,spacing:0){
             HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button(t("Logout"),action:logout)}.padding()
             Divider()
-            Button {showProfile=true} label:{HStack{VStack(alignment:.leading){Text(user.name).font(.headline);Text(SchooldayLanguage.roles(user.roles,lang)).font(.caption).foregroundStyle(.secondary)};Spacer();Label(t("Profile"),systemImage:"person.crop.circle")}}.buttonStyle(.plain).padding()
+            Button {showProfile=true} label:{HStack{VStack(alignment:.leading){Text(displayName.isEmpty ? user.name : displayName).font(.headline);Text(SchooldayLanguage.roles(user.roles,lang)).font(.caption).foregroundStyle(.secondary)};Spacer();Label(t("Profile"),systemImage:"person.crop.circle")}}.buttonStyle(.plain).padding()
             Divider()
             Text(t("Chats")).font(.title2.bold()).padding()
             ScrollView{
@@ -106,11 +107,23 @@ private struct Workspace:View {
             }
         }
     }
+    private var nicknameMenu:some View {
+        VStack(alignment:.leading,spacing:6) {
+            Picker(t("Nickname"),selection:Binding(get:{displayName},set:{value in
+                do{try db.saveNickname(user,value);displayName=value}catch{self.error=true}
+            })) {
+                ForEach(SchooldayNames.options(user.name),id:\.self){option in Text(option).tag(option)}
+            }
+            Text(t("Choose one or two parts of your full name.")).font(.caption).foregroundStyle(.secondary)
+        }
+    }
     private var profileView:some View {
         NavigationStack {
             Form {
                 Section {
+                    Text(t("Full name")).font(.caption).foregroundStyle(.secondary)
                     Text(user.name).font(.headline)
+                    nicknameMenu
                     Text(user.email)
                     Text(SchooldayLanguage.roles(user.roles,lang)).foregroundStyle(.secondary)
                 }

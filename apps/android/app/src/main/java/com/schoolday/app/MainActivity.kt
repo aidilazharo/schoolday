@@ -80,6 +80,8 @@ class MainActivity:ComponentActivity(){
     var country by remember(user.id){mutableStateOf(SchooldayCountry.normalize(prefs.getString("country."+user.id,null)))}
     fun setCountry(value:String){country=value;prefs.edit().putString("country."+user.id,value).apply()}
     var showProfile by remember{mutableStateOf(false)}
+    var displayName by remember{mutableStateOf(SchooldayNames.options(user.name).firstOrNull()?:user.name)}
+    var nicknameMenu by remember{mutableStateOf(false)}
     fun t(key:String)=SchooldayLanguage.text(key,lang)
     var spaces by remember{mutableStateOf(emptyList<ChatSpace>())}
     var selected by remember{mutableStateOf("")}
@@ -91,7 +93,7 @@ class MainActivity:ComponentActivity(){
     var busy by remember{mutableStateOf(false)}
     var loading by remember{mutableStateOf(true)}
     val scope=rememberCoroutineScope()
-    LaunchedEffect(user.id){try{spaces=withContext(Dispatchers.IO){db.spaces(user)};selected=spaces.firstOrNull()?.id?:""}catch(e:Exception){error=true}}
+    LaunchedEffect(user.id){try{displayName=withContext(Dispatchers.IO){db.nickname(user)};spaces=withContext(Dispatchers.IO){db.spaces(user)};selected=spaces.firstOrNull()?.id?:""}catch(e:Exception){error=true}}
     LaunchedEffect(selected){if(selected.isNotEmpty()){loading=true;try{messages=withContext(Dispatchers.IO){db.drafts(user,selected)}}catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error=true}finally{loading=false}}}
     fun change(value:String?){if(busy||selected.isEmpty())return;busy=true;val channel=selected
         scope.launch{try{messages=withContext(Dispatchers.IO){db.write(user,channel,value);db.drafts(user,channel)};if(value!=null)text=""}catch(e:Exception){error=true}finally{busy=false}}
@@ -105,7 +107,7 @@ class MainActivity:ComponentActivity(){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
                     Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);Spacer(Modifier.weight(1f));TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
                     HorizontalDivider()
-                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(user.name,fontWeight=FontWeight.Bold);Text(SchooldayLanguage.roles(user.roles,lang),style=MaterialTheme.typography.bodySmall)};TextButton(onClick={showProfile=true}){Text(t("Profile"))}}
+                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(displayName,fontWeight=FontWeight.Bold);Text(SchooldayLanguage.roles(user.roles,lang),style=MaterialTheme.typography.bodySmall)};TextButton(onClick={showProfile=true}){Text(t("Profile"))}}
                     HorizontalDivider()
                     Text(t("Chats"),style=MaterialTheme.typography.headlineSmall,modifier=Modifier.padding(16.dp))
                     LazyColumn{items(spaces,key={it.id}){space->
@@ -141,7 +143,21 @@ class MainActivity:ComponentActivity(){
             Surface(shape=RoundedCornerShape(16.dp),modifier=Modifier.padding(20.dp).widthIn(max=460.dp).fillMaxWidth()){
                 Column(Modifier.verticalScroll(rememberScrollState()).padding(24.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
                     Text(t("Profile"),style=MaterialTheme.typography.headlineSmall)
+                    Text(t("Full name"),style=MaterialTheme.typography.bodySmall)
                     Text(user.name,fontWeight=FontWeight.Bold)
+                    Text(t("Nickname"),style=MaterialTheme.typography.bodySmall)
+                    Box {
+                        OutlinedButton(onClick={nicknameMenu=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(displayName+" ▾")}
+                        DropdownMenu(expanded=nicknameMenu,onDismissRequest={nicknameMenu=false}){
+                            SchooldayNames.options(user.name).forEach{option->
+                                DropdownMenuItem(text={Text(option)},onClick={
+                                    nicknameMenu=false;busy=true
+                                    scope.launch{try{withContext(Dispatchers.IO){db.saveNickname(user,option)};displayName=option}catch(e:Exception){error=true}finally{busy=false}}
+                                })
+                            }
+                        }
+                    }
+                    Text(t("Choose one or two parts of your full name."),style=MaterialTheme.typography.bodySmall)
                     Text(user.email)
                     Text(SchooldayLanguage.roles(user.roles,lang))
                     LanguageMenu(lang,::setLang)
