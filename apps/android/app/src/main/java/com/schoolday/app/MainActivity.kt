@@ -128,8 +128,10 @@ class MainActivity:ComponentActivity(){
         Row(Modifier.fillMaxSize()){
             if(wide||!opened){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
-                    Row(Modifier.fillMaxWidth().height(66.dp).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);if(!wide)TextButton(onClick={choosing=!choosing},enabled=!busy,contentPadding=PaddingValues(2.dp)){Text(ModuleNavigation.label(tab,lang)+" ▾",style=MaterialTheme.typography.labelSmall)};TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
+                    Row(Modifier.fillMaxWidth().height(66.dp).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);if(!wide)TextButton(onClick={choosing=!choosing},enabled=!busy,contentPadding=PaddingValues(2.dp)){Text(ModuleNavigation.label(tab,lang)+" ▾",style=MaterialTheme.typography.labelSmall)};TextButton(onClick={category="Me";moduleId="Profile";record="";choosing=false;opened=true},enabled=!busy,modifier=Modifier.semantics{contentDescription=t("Profile")}){ModuleIcon("Profile",Color(0xFF333333))}}
                     HorizontalDivider()
+                    val related=SchoolModules.related(category,user.roles,minor,tab)
+                    if(related.size>1)LazyRow(Modifier.fillMaxWidth()){items(related,key={it.id}){m->TextButton(onClick={moduleId=m.id;record=""},enabled=!busy){Column{if(m.status!="local")HorizontalDivider(Modifier.width(32.dp),thickness=2.dp,color=Color.Red);Text(m.title,fontWeight=if(tab==m.id)FontWeight.Bold else FontWeight.Normal)}}}}
                     LazyColumn(Modifier.weight(1f)){
                         if(tab!="Chats")item{Column(Modifier.fillMaxWidth()){Text(module.title,modifier=Modifier.padding(12.dp),fontWeight=FontWeight.Bold);if(module.status!="local")Text(if(module.status=="partial")"Partially implemented" else "Not implemented",modifier=Modifier.padding(horizontal=12.dp),color=androidx.compose.ui.graphics.Color.Red)}}
                         if(tab=="Chats"){items(spaces,key={it.id}){space->TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){GroupAvatar(space.id,GroupBrand.title(space.id,t(space.title)));Text(GroupBrand.title(space.id,t(space.title)),modifier=Modifier.weight(1f).padding(8.dp));Text("›")};HorizontalDivider()}}
@@ -137,10 +139,10 @@ class MainActivity:ComponentActivity(){
                         else if(module.records.isNotEmpty()){items(module.records,key={it}){r->TextButton(onClick={record=r;opened=true},modifier=Modifier.fillMaxWidth()){Column(Modifier.weight(1f)){Text(r);Text("Sample preview",style=MaterialTheme.typography.labelSmall)}}}}
                         else item{TextButton(onClick={opened=true}){Text(module.title+" ›")}}
                     }
-                    if(!wide&&choosing){HorizontalDivider();MobileModuleSheet(SchoolModules.visible(category,user.roles,minor),category,moduleId,lang,busy,Modifier.height(pickerHeight),{choosing=false}){m->moduleId=m.id;record="";choosing=false;opened=false}}
+                    if(!wide&&choosing){HorizontalDivider();MobileModuleSheet(SchoolModules.destinations(category,user.roles,minor),category,moduleId,lang,busy,Modifier.height(pickerHeight),{choosing=false}){m->moduleId=m.id;record="";choosing=false;opened=false}}
                     HorizontalDivider()
                     Row(Modifier.fillMaxWidth()){
-                        tabs.forEachIndexed{j,name->TextButton(onClick={if(name==category&&!wide){choosing=!choosing}else{category=name;moduleId=SchoolModules.visible(name,user.roles,minor).first().id;record="";choosing=!wide;opened=wide}},enabled=!busy,modifier=Modifier.weight(1f),contentPadding=PaddingValues(2.dp)){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(listOf("◉","▤","▦","☆","○")[j],style=MaterialTheme.typography.titleLarge);Text(ModuleNavigation.label(name,lang),style=MaterialTheme.typography.labelSmall,fontWeight=if(category==name)FontWeight.Bold else FontWeight.Normal,maxLines=2)}}}
+                        tabs.forEachIndexed{j,name->TextButton(onClick={if(name==category&&!wide){choosing=!choosing}else{category=name;moduleId=SchoolModules.destinations(name,user.roles,minor).first().id;record="";choosing=!wide;opened=wide}},enabled=!busy,modifier=Modifier.weight(1f),contentPadding=PaddingValues(2.dp)){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(listOf("◉","▤","▦","☆","○")[j],style=MaterialTheme.typography.titleLarge);Text(ModuleNavigation.label(name,lang),style=MaterialTheme.typography.labelSmall,fontWeight=if(category==name)FontWeight.Bold else FontWeight.Normal,maxLines=2)}}}
                     }
                 }
             }
@@ -153,7 +155,7 @@ class MainActivity:ComponentActivity(){
                             Text(if(tab=="Chats")GroupBrand.title(selected,t(spaces.firstOrNull{it.id==selected}?.title?:"Chats")) else t(module.title),fontWeight=FontWeight.Bold,maxLines=2)
                             if(tab=="Chats")Text(t("Local only"),style=MaterialTheme.typography.bodySmall)
                         }
-                        if(wide){Box(Modifier.weight(1f)){key(category){ModuleToolbar(SchoolModules.visible(category,user.roles,minor),moduleId,lang,busy){m->moduleId=m.id;record="";choosing=false;opened=true}}}}
+                        if(wide){Box(Modifier.weight(1f)){key(category){ModuleToolbar(SchoolModules.destinations(category,user.roles,minor),moduleId,lang,busy){m->moduleId=m.id;record="";choosing=false;opened=true}}}}
                         if(tab=="Chats")TextButton(onClick={groupOpen=!groupOpen},enabled=!busy&&selected.isNotEmpty(),modifier=Modifier.semantics{contentDescription=groupSettingsLabel(lang)},contentPadding=PaddingValues(4.dp)){ModuleIcon("Administration",Color(0xFF333333))}
                         if(!wide)TextButton(onClick={if(groupOpen)groupOpen=false else opened=false},enabled=!busy){Text(t("Back"))}
                     }
@@ -183,6 +185,7 @@ class MainActivity:ComponentActivity(){
                     LanguageMenu(lang,::setLang)
                     CountryMenu(country,lang,::setCountry)
                     FamilyFeatures(db,user,"Profile"){points=db.points(user)}
+                    TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}
 
                     }
                     else if(tab=="Rewards"||tab=="Quiz")key(tab){Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp)){FamilyFeatures(db,user,tab){points=db.points(user)}}}
@@ -200,7 +203,7 @@ class MainActivity:ComponentActivity(){
     }
 }
 @Composable private fun ModuleTool(m:SchoolModule,moduleId:String,lang:String,busy:Boolean,modifier:Modifier=Modifier,onSelect:()->Unit){
-    val active=moduleId==m.id
+    val active=SchoolModules.parentID(moduleId)==m.id
     TextButton(onClick=onSelect,enabled=!busy,modifier=modifier.heightIn(min=62.dp).background(if(active)Color(0xFFEDEDED) else Color.Transparent,RoundedCornerShape(5.dp)).semantics{selected=active;contentDescription=m.title+if(m.status=="local")"" else if(m.status=="partial")" · Partially implemented" else " · Not implemented"},contentPadding=PaddingValues(2.dp)){
         Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(3.dp)){
             if(m.status!="local")HorizontalDivider(thickness=3.dp,color=Color(0xFFC62828))else Spacer(Modifier.height(3.dp))
@@ -215,7 +218,7 @@ class MainActivity:ComponentActivity(){
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text(ModuleNavigation.label(category,lang),modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold);TextButton(onClick=onClose){Text("×",style=MaterialTheme.typography.titleLarge)}}
             LazyColumn(Modifier.fillMaxWidth().weight(1f),contentPadding=PaddingValues(bottom=4.dp)){
                 items(modules,key={it.id}){m->
-                    val active=moduleId==m.id
+                    val active=SchoolModules.parentID(moduleId)==m.id
                     TextButton(onClick={onSelect(m)},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=52.dp).background(if(active)Color(0xFFF0F0F0) else Color.White,RoundedCornerShape(8.dp)).semantics{selected=active;contentDescription=m.title+if(m.status=="local")"" else if(m.status=="partial")" · Partially implemented" else " · Not implemented"},contentPadding=PaddingValues(horizontal=12.dp,vertical=6.dp)){
                         Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){
                             Column(horizontalAlignment=Alignment.CenterHorizontally){if(m.status!="local")HorizontalDivider(Modifier.width(22.dp),thickness=2.dp,color=Color(0xFFC62828))else Spacer(Modifier.height(2.dp));Spacer(Modifier.height(3.dp));ModuleIcon(m.id,Color(0xFF333333))}

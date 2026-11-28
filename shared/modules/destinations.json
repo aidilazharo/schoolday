@@ -1,0 +1,95 @@
+{
+  "Connect": {
+    "Chats": [
+      "Chats",
+      "Alerts"
+    ],
+    "Calls": [
+      "Calls",
+      "Classroom"
+    ],
+    "Friends": [
+      "Friends"
+    ]
+  },
+  "Learn": {
+    "Courses": [
+      "Courses"
+    ],
+    "Assignments": [
+      "Assignments"
+    ],
+    "Quiz": [
+      "Quiz",
+      "Gate",
+      "QuizDraft",
+      "Assessment"
+    ],
+    "Grades": [
+      "Grades"
+    ],
+    "Materials": [
+      "Materials",
+      "Files",
+      "Library"
+    ],
+    "Research": [
+      "Research"
+    ]
+  },
+  "Campus": {
+    "Calendar": [
+      "Calendar",
+      "EventDraft",
+      "Timetable"
+    ],
+    "Attendance": [
+      "Attendance"
+    ],
+    "Institutions": [
+      "Institutions",
+      "Administration",
+      "University"
+    ],
+    "Activities": [
+      "Activities"
+    ],
+    "Services": [
+      "Services",
+      "Welfare"
+    ]
+  },
+  "Achievements": {
+    "Rewards": [
+      "Rewards"
+    ],
+    "Certificates": [
+      "Certificates",
+      "CertificateDraft",
+      "Credentials"
+    ],
+    "Portfolio": [
+      "Portfolio"
+    ],
+    "Career": [
+      "Career",
+      "Internship"
+    ]
+  },
+  "Me": {
+    "Profile": [
+      "Profile"
+    ],
+    "FamilyControls": [
+      "FamilyControls"
+    ],
+    "Security": [
+      "Security",
+      "Offline"
+    ],
+    "Support": [
+      "Support",
+      "Safety"
+    ]
+  }
+}

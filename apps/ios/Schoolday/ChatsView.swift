@@ -107,7 +107,7 @@ private struct Workspace:View {
     }
     private func selectCategory(_ name:String,wide:Bool){
         if name==category && !wide{choosing.toggle();return}
-        category=name;moduleId=SchoolModules.visible(name,user.roles,minor:minor)[0].id;record="";choosing = !wide;opened=wide
+        category=name;moduleId=SchoolModules.destinations(name,user.roles,minor:minor)[0].id;record="";choosing = !wide;opened=wide
     }
     private func sidebar(wide:Bool)->some View {
         VStack(alignment:.leading,spacing:0){
@@ -115,7 +115,7 @@ private struct Workspace:View {
                 Text("schoolday").font(.system(size:26,weight:.bold,design:.serif)).italic()
                 Spacer()
                 if !wide{Button(ModuleNavigation.label(tab,lang)+" ▾"){choosing.toggle()}.font(.caption)}
-                Button(t("Logout"),action:logout)
+                Button{category="Me";moduleId="Profile";record="";choosing=false;opened=true}label:{Image(systemName:"person.crop.circle").frame(width:44,height:44)}.accessibilityLabel(t("Profile"))
             }.padding(.horizontal,12).frame(height:66)
             Divider()
             GeometryReader{geo in
@@ -133,6 +133,8 @@ private struct Workspace:View {
     }
     private var recordList:some View {
         VStack(alignment:.leading,spacing:8){
+            let tools=SchoolModules.related(category,user.roles,minor:minor,id:tab)
+            if tools.count>1{ScrollView(.horizontal,showsIndicators:false){HStack{ForEach(tools){m in Button{moduleId=m.id;record=""}label:{Text(m.title).font(.caption).padding(8).background(tab==m.id ? Color.primary.opacity(0.10):Color.clear).overlay(alignment:.top){if m.status != "local"{Rectangle().fill(.red).frame(height:2)}}}.buttonStyle(.plain)}}}}
             if tab != "Chats" {
                 VStack(alignment:.leading){
                     Text(module.title).font(.headline)
@@ -172,7 +174,7 @@ private struct Workspace:View {
             HStack{Text(ModuleNavigation.label(category,lang)).font(.headline);Spacer();Button{choosing=false}label:{Image(systemName:"xmark").frame(width:44,height:44)}.accessibilityLabel(t("Close"))}.padding(.horizontal,16)
             ScrollView{
                 LazyVStack(spacing:0){
-                    ForEach(SchoolModules.visible(category,user.roles,minor:minor)){m in
+                    ForEach(SchoolModules.destinations(category,user.roles,minor:minor)){m in
                         Button{selectModule(m,wide:false)}label:{
                             HStack(spacing:12){
                                 VStack(spacing:3){
@@ -181,11 +183,11 @@ private struct Workspace:View {
                                 }
                                 Text(ModuleNavigation.label(m.id,lang)).font(.body)
                                 Spacer()
-                                Image(systemName:moduleId==m.id ? "checkmark":"chevron.right").font(.caption)
+                                Image(systemName:SchoolModules.parentID(moduleId)==m.id ? "checkmark":"chevron.right").font(.caption)
                             }.frame(minHeight:52).padding(.horizontal,12)
-                            .background(moduleId==m.id ? Color.primary.opacity(0.07):Color.clear,in:RoundedRectangle(cornerRadius:8))
+                            .background(SchoolModules.parentID(moduleId)==m.id ? Color.primary.opacity(0.07):Color.clear,in:RoundedRectangle(cornerRadius:8))
                             .contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel(m.title+(m.status=="local" ? "":m.status=="partial" ? " · Partially implemented":" · Not implemented")).accessibilityAddTraits(moduleId==m.id ? .isSelected:[])
+                        }.buttonStyle(.plain).accessibilityLabel(m.title+(m.status=="local" ? "":m.status=="partial" ? " · Partially implemented":" · Not implemented")).accessibilityAddTraits(SchoolModules.parentID(moduleId)==m.id ? .isSelected:[])
                         Divider()
                     }
                 }.padding(.horizontal,16)
@@ -196,7 +198,7 @@ private struct Workspace:View {
         ScrollView(.horizontal,showsIndicators:true){
             HStack(alignment:.top,spacing:4){
                 ForEach(modules){m in
-                    ModuleToolButton(module:m,lang:lang,selected:moduleId==m.id){selectModule(m,wide:wide)}
+                    ModuleToolButton(module:m,lang:lang,selected:SchoolModules.parentID(moduleId)==m.id){selectModule(m,wide:wide)}
                 }
             }.padding(.horizontal,4).padding(.vertical,3)
         }.fixedSize(horizontal:false,vertical:true).id(category)
@@ -222,7 +224,7 @@ private struct Workspace:View {
                         Text(tab=="Chats" ? GroupBrand.title(selected,t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")):t(module.title)).font(.subheadline.bold()).lineLimit(2)
                         if tab=="Chats"{Text(t("Local only")).font(.caption2).foregroundStyle(.secondary)}
                     }.frame(minWidth:80,maxWidth:150,alignment:.leading)
-                    moduleToolbar(SchoolModules.visible(category,user.roles,minor:minor),wide:true)
+                    moduleToolbar(SchoolModules.destinations(category,user.roles,minor:minor),wide:true)
                     if tab=="Chats"{groupButton}
                 }.padding(.horizontal,12).frame(height:66)
                 Divider()
@@ -265,6 +267,7 @@ private struct Workspace:View {
                     HStack {Text(t("Country / region"));Spacer();CountryMenu(country:$country,language:lang)}
                 }
                 FamilyFeatures(db:db,user:user,screen:"Profile",onChange:refreshPoints)
+                Section{Button(t("Logout"),action:logout)}
             }
     }
     private func refreshPoints(){points=(try? db.points(user)) ?? points}
