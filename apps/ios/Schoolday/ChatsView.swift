@@ -99,13 +99,13 @@ private struct Workspace:View {
         }.task{
             do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if selected.isEmpty,let first=spaces.first{selected=first.id}}catch{self.error=true}
         }
-        .sheet(isPresented:$choosing){moduleChooser.presentationDetents([.medium,.large]).presentationDragIndicator(.visible)}
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
     }
     private func selectModule(_ m:SchoolModule,wide:Bool){
         moduleId=m.id;record="";choosing=false;opened=wide
     }
     private func selectCategory(_ name:String,wide:Bool){
+        if name==category && !wide{choosing.toggle();return}
         category=name;moduleId=SchoolModules.visible(name,user.roles,minor:minor)[0].id;record="";choosing = !wide;opened=wide
     }
     private func sidebar(wide:Bool)->some View {
@@ -117,7 +117,15 @@ private struct Workspace:View {
                 Button(t("Logout"),action:logout)
             }.padding(.horizontal,12).frame(height:66)
             Divider()
-            ScrollView{recordList.padding(8)}
+            GeometryReader{geo in
+                VStack(spacing:0){
+                    ScrollView{recordList.padding(8)}.frame(maxHeight:.infinity)
+                    if !wide && choosing{
+                        Divider()
+                        moduleChooser.frame(height:min(geo.size.height*(geo.size.height<300 ? 0.80:0.72),440))
+                    }
+                }
+            }
             Divider()
             categoryToolbar(wide:wide)
         }
@@ -181,7 +189,7 @@ private struct Workspace:View {
                     }
                 }.padding(.horizontal,16)
             }
-        }.padding(.top,16)
+        }.padding(.top,4).background(Color(uiColor:.systemBackground))
     }
     private func moduleToolbar(_ modules:[SchoolModule],wide:Bool)->some View{
         ScrollView(.horizontal,showsIndicators:true){

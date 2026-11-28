@@ -112,3 +112,7 @@ Nur Alya Sofea, age 21, is a fictional university student sample with Student ro
 ## Mobile module picker
 
 Compact screens retain the record list and the single five-category footer. Tapping a category or current module label opens a dismissible bottom sheet with one module per row, a selected checkmark and red top marker on unfinished icons. The picker scrolls independently and closes on selection; on web it is a native modal dialog, iOS uses a sheet and Android uses Material3 ModalBottomSheet. Wide screens retain their aligned right header toolbar. Responsive checks exercise dismissal, reopening and selection at compact viewport sizes.
+
+## Persistent mobile footer during module selection
+
+The module picker is non-modal and contained above the permanent footer on compact screens. The records and picker scroll independently; footer categories remain clickable while it is open. Selecting the active category again or using Close dismisses the picker. Switching categories updates the picker without leaving the footer. Desktop and wide tablet headers are unchanged. Web viewport checks verify the picker does not overlap the footer and that switching categories works while it is open.
