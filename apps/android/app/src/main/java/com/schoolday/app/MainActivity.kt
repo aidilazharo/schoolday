@@ -88,6 +88,7 @@ class MainActivity:ComponentActivity(){
     fun setCountry(value:String){country=value;prefs.edit().putString("country."+user.id,value).apply()}
     var showProfile by remember{mutableStateOf(false)}
     var showRewards by remember{mutableStateOf(false)}
+    var showQuiz by remember{mutableStateOf(false)}
     var points by remember{mutableStateOf(0)}
     var displayName by remember{mutableStateOf(SchooldayNames.options(user.name).firstOrNull()?:user.name)}
     var nicknameMenu by remember{mutableStateOf(false)}
@@ -108,7 +109,7 @@ class MainActivity:ComponentActivity(){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
                     Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);TextButton(onClick={showProfile=true},enabled=!busy){Text(t("Profile"))};TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
                     HorizontalDivider()
-                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text(t("Chats"),style=MaterialTheme.typography.headlineSmall,modifier=Modifier.weight(1f));TextButton(onClick={showRewards=true}){Text(t("Rewards"))}}
+                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text(t("Chats"),style=MaterialTheme.typography.headlineSmall,modifier=Modifier.weight(1f));TextButton(onClick={showQuiz=true}){Text(t("Quiz"))};TextButton(onClick={showRewards=true}){Text(t("Rewards"))}}
                     LazyColumn{items(spaces,key={it.id}){space->
                         TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")}
                         HorizontalDivider()
@@ -128,7 +129,8 @@ class MainActivity:ComponentActivity(){
             }
         }
     }
-    if(showRewards) AlertDialog(onDismissRequest={showRewards=false},title={Text(t("Rewards"))},text={Column{Text(t("Points balance"));Text(points.toString(),style=MaterialTheme.typography.headlineLarge);Text(t("Points"))}},confirmButton={TextButton(onClick={showRewards=false}){Text(t("Done"))}})
+    if(showRewards) FeatureDialog(db,user,"Rewards",{showRewards=false},{points=db.points(user)})
+    if(showQuiz) FeatureDialog(db,user,"Quiz",{showQuiz=false},{points=db.points(user)})
     if(showProfile) {
         androidx.compose.ui.window.Dialog(onDismissRequest={showProfile=false},properties=androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth=false)){
             Surface(shape=RoundedCornerShape(16.dp),modifier=Modifier.padding(20.dp).widthIn(max=460.dp).fillMaxWidth()){
@@ -154,6 +156,7 @@ class MainActivity:ComponentActivity(){
                     Text(SchooldayLanguage.roles(user.roles,lang))
                     LanguageMenu(lang,::setLang)
                     CountryMenu(country,lang,::setCountry)
+                    FamilyFeatures(db,user,"Profile"){points=db.points(user)}
                     Button(onClick={showProfile=false},modifier=Modifier.fillMaxWidth()){Text(t("Done"))}
                 }
             }

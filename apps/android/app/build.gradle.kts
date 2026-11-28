@@ -26,5 +26,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("androidx.print:print:1.0.0")
     testImplementation("junit:junit:4.13.2")
 }

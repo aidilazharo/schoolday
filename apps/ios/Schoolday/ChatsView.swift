@@ -64,6 +64,7 @@ private struct Workspace:View {
     @AppStorage private var country:String
     @State private var showProfile=false
     @State private var showRewards=false
+    @State private var showQuiz=false
     @State private var points=0
     @State private var displayName=""
     init(db:LocalDatabase,user:Account,logout:@escaping ()->Void){
@@ -90,13 +91,14 @@ private struct Workspace:View {
         }
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
         .sheet(isPresented:$showProfile){profileView}
-        .sheet(isPresented:$showRewards){NavigationStack{VStack(spacing:12){Text(t("Points balance"));Text(String(points)).font(.largeTitle.bold());Text(t("Points"))}.navigationTitle(t("Rewards")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showRewards=false}}}}}
+        .sheet(isPresented:$showRewards){NavigationStack{Form{FamilyFeatures(db:db,user:user,screen:"Rewards",onChange:refreshPoints)}.navigationTitle(t("Rewards")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showRewards=false}}}}}
+        .sheet(isPresented:$showQuiz){NavigationStack{Form{FamilyFeatures(db:db,user:user,screen:"Quiz",onChange:refreshPoints)}.navigationTitle(t("Quiz")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showQuiz=false}}}}}
     }
     private var sidebar:some View {
         VStack(alignment:.leading,spacing:0){
             HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button {showProfile=true} label:{Image(systemName:"person.crop.circle").frame(minWidth:44,minHeight:44)}.accessibilityLabel(t("Profile"));Button(t("Logout"),action:logout)}.padding()
             Divider()
-            HStack{Text(t("Chats")).font(.title2.bold());Spacer();Button{showRewards=true}label:{Label(t("Rewards"),systemImage:"star")}}.padding()
+            HStack{Text(t("Chats")).font(.title2.bold());Spacer();Button{showQuiz=true}label:{Image(systemName:"list.bullet.clipboard")}.accessibilityLabel(t("Quiz"));Button{showRewards=true}label:{Label(t("Rewards"),systemImage:"star")}}.padding()
             ScrollView{
                 ForEach(spaces){space in
                     Button{select(space.id,open:true)}label:{
@@ -132,10 +134,12 @@ private struct Workspace:View {
                     HStack {Text(t("Language"));Spacer();LanguageMenu(language:$lang)}
                     HStack {Text(t("Country / region"));Spacer();CountryMenu(country:$country,language:lang)}
                 }
+                FamilyFeatures(db:db,user:user,screen:"Profile",onChange:refreshPoints)
             }.navigationTitle(t("Profile"))
              .toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showProfile=false}}}
         }
     }
+    private func refreshPoints(){points=(try? db.points(user)) ?? points}
     private func chat(wide:Bool)->some View {
         VStack(spacing:0){
             HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();if !wide{Button(t("Back")){opened=false}}}.padding()
