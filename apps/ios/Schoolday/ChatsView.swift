@@ -97,7 +97,7 @@ private struct Workspace:View {
         VStack(alignment:.leading,spacing:0){
             HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button {showProfile=true} label:{Image(systemName:"person.crop.circle").frame(minWidth:44,minHeight:44)}.accessibilityLabel(t("Profile"));Button(t("Logout"),action:logout)}.padding()
             Divider()
-            HStack{Text(t("Chats")).font(.title2.bold());Spacer();Button{showQuiz=true}label:{Image(systemName:"list.bullet.clipboard")}.accessibilityLabel(t("Quiz"));Button{showRewards=true}label:{Label(t("Rewards"),systemImage:"star")}}.padding()
+            HStack{Spacer();Button{showQuiz=true}label:{Image(systemName:"list.bullet.clipboard")}.accessibilityLabel(t("Quiz"));Button{showRewards=true}label:{Label(t("Rewards"),systemImage:"star")}}.padding()
             ScrollView{
                 ForEach(spaces){space in
                     Button{select(space.id,open:true)}label:{

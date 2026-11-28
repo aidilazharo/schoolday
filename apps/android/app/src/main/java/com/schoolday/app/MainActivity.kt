@@ -134,7 +134,7 @@ class MainActivity:ComponentActivity(){
                     }}else{
                     Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);TextButton(onClick={showProfile=true},enabled=!busy){Text(t("Profile"))};TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
                     HorizontalDivider()
-                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text(t("Chats"),style=MaterialTheme.typography.headlineSmall,modifier=Modifier.weight(1f));TextButton(onClick={showQuiz=true}){Text(t("Quiz"))};TextButton(onClick={showRewards=true}){Text(t("Rewards"))}}
+                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Spacer(Modifier.weight(1f));TextButton(onClick={showQuiz=true}){Text(t("Quiz"))};TextButton(onClick={showRewards=true}){Text(t("Rewards"))}}
                     LazyColumn{items(spaces,key={it.id}){space->
                         TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")}
                         HorizontalDivider()
