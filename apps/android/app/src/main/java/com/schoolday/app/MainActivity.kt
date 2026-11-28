@@ -5,6 +5,11 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -96,7 +101,6 @@ class MainActivity:ComponentActivity(){
     val tab=module.id
     val kind=when(tab){"QuizDraft"->"Quiz";"CertificateDraft"->"Certificates";"EventDraft"->"Calendar";else->null}
     val drafts=remember(kind,revision){if(kind!=null)runCatching{db.rows("SELECT id,title,details FROM workspace_drafts WHERE owner_id=? AND kind=? ORDER BY created_at DESC,id",user.id,kind)}.getOrDefault(emptyList()) else emptyList()}
-    var moduleMenu by remember{mutableStateOf(false)}
     val staff=user.roles.split(" + ").any{it=="Teacher"||it=="School Admin"}
     val tabs=SchoolModules.categories
     var points by remember{mutableStateOf(0)}
@@ -121,16 +125,27 @@ class MainActivity:ComponentActivity(){
                     Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
                     HorizontalDivider()
                     LazyColumn(Modifier.weight(1f)){
-                        item{Box(Modifier.padding(8.dp)){OutlinedButton(onClick={moduleMenu=true},modifier=Modifier.fillMaxWidth()){Text(category+" · "+module.title)};DropdownMenu(expanded=moduleMenu,onDismissRequest={moduleMenu=false}){SchoolModules.visible(category,user.roles).forEach{m->DropdownMenuItem(text={Text(m.title+if(m.status=="local")"" else " · "+if(m.status=="partial")"Partial" else "Not implemented")},onClick={moduleMenu=false;moduleId=m.id;record="";opened=wide})}}}}
-                        item{Column(Modifier.fillMaxWidth()){if(module.status!="local")HorizontalDivider(thickness=3.dp,color=androidx.compose.ui.graphics.Color.Red);Text(module.title,modifier=Modifier.padding(12.dp),fontWeight=FontWeight.Bold);if(module.status!="local")Text(if(module.status=="partial")"Partially implemented" else "Not implemented",modifier=Modifier.padding(horizontal=12.dp),color=androidx.compose.ui.graphics.Color.Red)}}
+                        if(tab!="Chats")item{Column(Modifier.fillMaxWidth()){if(module.status!="local")HorizontalDivider(thickness=3.dp,color=androidx.compose.ui.graphics.Color.Red);Text(module.title,modifier=Modifier.padding(12.dp),fontWeight=FontWeight.Bold);if(module.status!="local")Text(if(module.status=="partial")"Partially implemented" else "Not implemented",modifier=Modifier.padding(horizontal=12.dp),color=androidx.compose.ui.graphics.Color.Red)}}
                         if(tab=="Chats"){items(spaces,key={it.id}){space->TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")};HorizontalDivider()}}
                         else if(kind!=null&&staff){item{TextButton(onClick={record="";opened=true}){Text("+ "+t("Create draft"))}};if(drafts.isEmpty())item{Text(t("No drafts yet"),modifier=Modifier.padding(12.dp))};items(drafts,key={it[0]}){r->TextButton(onClick={record=r[0];opened=true},modifier=Modifier.fillMaxWidth()){Column(Modifier.weight(1f)){Text(r[1],fontWeight=FontWeight.Bold);Text(r[2],maxLines=2,style=MaterialTheme.typography.bodySmall);Text(t("Draft only · Not published"),style=MaterialTheme.typography.labelSmall)}}}}
                         else if(module.records.isNotEmpty()){items(module.records,key={it}){r->TextButton(onClick={record=r;opened=true},modifier=Modifier.fillMaxWidth()){Column(Modifier.weight(1f)){Text(r);Text("Sample preview",style=MaterialTheme.typography.labelSmall)}}}}
                         else item{TextButton(onClick={opened=true}){Text(module.title+" ›")}}
                     }
                     HorizontalDivider()
+                    key(category){LazyRow(Modifier.fillMaxWidth(),contentPadding=PaddingValues(horizontal=4.dp,vertical=3.dp),horizontalArrangement=Arrangement.spacedBy(4.dp)){
+                        items(SchoolModules.visible(category,user.roles),key={it.id}){m->
+                            TextButton(onClick={moduleId=m.id;record="";opened=wide},enabled=!busy,modifier=Modifier.width(76.dp).heightIn(min=64.dp).background(if(moduleId==m.id)Color(0xFFEDEDED) else Color.Transparent,RoundedCornerShape(5.dp)).semantics{this.selected=moduleId==m.id;contentDescription=m.title+if(m.status=="local")"" else if(m.status=="partial")" · Partially implemented" else " · Not implemented"},contentPadding=PaddingValues(2.dp)){
+                                Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(3.dp)){
+                                    if(m.status!="local")HorizontalDivider(thickness=3.dp,color=Color(0xFFC62828))else Spacer(Modifier.height(3.dp))
+                                    ModuleIcon(m.id,if(moduleId==m.id)Color(0xFF171717) else Color(0xFF666666))
+                                    Text(ModuleNavigation.label(m.id,lang),style=MaterialTheme.typography.labelSmall,maxLines=3,fontWeight=if(moduleId==m.id)FontWeight.Bold else FontWeight.Normal,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+                                }
+                            }
+                        }
+                    }}
+                    HorizontalDivider()
                     Row(Modifier.fillMaxWidth()){
-                        tabs.forEachIndexed{j,name->TextButton(onClick={category=name;moduleId=SchoolModules.visible(name,user.roles).first().id;record="";opened=wide},enabled=!busy,modifier=Modifier.weight(1f),contentPadding=PaddingValues(2.dp)){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(listOf("◉","▤","▦","☆","○")[j],style=MaterialTheme.typography.titleLarge);Text(t(name),style=MaterialTheme.typography.labelSmall,fontWeight=if(category==name)FontWeight.Bold else FontWeight.Normal,maxLines=2)}}}
+                        tabs.forEachIndexed{j,name->TextButton(onClick={category=name;moduleId=SchoolModules.visible(name,user.roles).first().id;record="";opened=wide},enabled=!busy,modifier=Modifier.weight(1f),contentPadding=PaddingValues(2.dp)){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(listOf("◉","▤","▦","☆","○")[j],style=MaterialTheme.typography.titleLarge);Text(ModuleNavigation.label(name,lang),style=MaterialTheme.typography.labelSmall,fontWeight=if(category==name)FontWeight.Bold else FontWeight.Normal,maxLines=2)}}}
                     }
                 }
             }

@@ -14,6 +14,7 @@ try{
   const page=await browser.newPage({viewport:{width,height}});await page.goto(url);
   await page.waitForFunction(()=>{const e=document.querySelector('#sample');return e&&!e.disabled&&e.options.length>1});await page.locator('#sample').selectOption('student');
   await page.locator('.module-nav .chat-item').first().waitFor({state:'visible'});
+  assert.equal(await page.locator('.module-icon-nav button').count(),6);
   const wide=width>=768&&height>=480;
   assert.equal(await page.locator('.chat-panel').isVisible(),wide,name+' initial pane');
   await page.locator('.module-nav .chat-item').first().click();
@@ -22,7 +23,9 @@ try{
   await noOverflow(page,name);await page.screenshot({path:'responsive-screenshots/'+name+'-chat.png'});
   if(!wide)await page.locator('.chat-panel .back').click();
   await page.locator('.footer-nav button').nth(1).click();
-  await page.getByLabel('Module',{exact:true}).selectOption('Quiz');
+  await page.locator('.module-icon-nav [data-module=Quiz]').click();
+  assert.equal(await page.locator('.module-icon-nav [aria-current=page]').getAttribute('data-module'),'Quiz');
+  assert.ok(await page.locator('.module-icon-nav [data-module=Gate]').evaluate(el=>el.classList.contains('unfinished-module')));
   if(!wide)await page.locator('.module-nav .chat-item').first().click();
   await page.locator('.quiz-card').first().waitFor({state:'visible'});
   assert.equal(await page.locator('.sidebar').isVisible(),wide);

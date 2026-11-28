@@ -15,8 +15,8 @@
     "status": "preview",
     "role": "all",
     "records": [
-      "Class group",
-      "Teacher"
+      "Learning group",
+      "Educator"
     ],
     "fields": [
       "Contact",
@@ -26,7 +26,7 @@
   {
     "cat": "Connect",
     "id": "Classroom",
-    "title": "Online classroom",
+    "title": "Live classes",
     "status": "preview",
     "role": "all",
     "records": [
@@ -61,7 +61,7 @@
     "status": "preview",
     "role": "all",
     "records": [
-      "School closure drill",
+      "Institution closure drill",
       "Weather advisory"
     ],
     "fields": [
@@ -214,7 +214,7 @@
   {
     "cat": "Learn",
     "id": "Internship",
-    "title": "TVET & internship",
+    "title": "Practical training & internship",
     "status": "preview",
     "role": "all",
     "records": [
@@ -319,7 +319,7 @@
   {
     "cat": "Campus",
     "id": "Library",
-    "title": "Library & textbooks",
+    "title": "Library & learning resources",
     "status": "preview",
     "role": "all",
     "records": [
@@ -366,13 +366,13 @@
   {
     "cat": "Campus",
     "id": "Administration",
-    "title": "Administration & PIBG",
+    "title": "Institution administration",
     "status": "preview",
     "role": "staff",
     "records": [
-      "School roster",
-      "PIBG meeting",
-      "Class placement"
+      "Institution roster",
+      "Community meeting",
+      "Group placement"
     ],
     "fields": [
       "Record type",
@@ -383,7 +383,7 @@
   {
     "cat": "Campus",
     "id": "University",
-    "title": "University administration",
+    "title": "Academic administration",
     "status": "preview",
     "role": "all",
     "records": [
@@ -433,7 +433,7 @@
   {
     "cat": "Achievements",
     "id": "Portfolio",
-    "title": "Portfolio & PAJSK",
+    "title": "Portfolio & co-curricular activities",
     "status": "preview",
     "role": "all",
     "records": [
