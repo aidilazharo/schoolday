@@ -123,6 +123,7 @@ class MainActivity:ComponentActivity(){
         val wide=maxWidth>=768.dp && LocalConfiguration.current.screenHeightDp>=480
         LaunchedEffect(wide){if(wide){opened=true;choosing=false}}
         val sidebarWidth=(maxWidth*0.30f).coerceIn(250.dp,390.dp)
+        val pickerHeight=((maxHeight-126.dp).coerceAtLeast(0.dp)*0.72f).coerceAtMost(440.dp)
         BackHandler(enabled=groupOpen||(!wide&&(opened||choosing))){if(!busy){if(groupOpen)groupOpen=false else if(choosing)choosing=false else opened=false}}
         Row(Modifier.fillMaxSize()){
             if(wide||!opened){
@@ -136,7 +137,7 @@ class MainActivity:ComponentActivity(){
                         else if(module.records.isNotEmpty()){items(module.records,key={it}){r->TextButton(onClick={record=r;opened=true},modifier=Modifier.fillMaxWidth()){Column(Modifier.weight(1f)){Text(r);Text("Sample preview",style=MaterialTheme.typography.labelSmall)}}}}
                         else item{TextButton(onClick={opened=true}){Text(module.title+" ›")}}
                     }
-                    if(!wide&&choosing){HorizontalDivider();MobileModuleSheet(SchoolModules.visible(category,user.roles,minor),category,moduleId,lang,busy,Modifier.height(((maxHeight-126.dp).coerceAtLeast(0.dp)*0.72f).coerceAtMost(440.dp)),{choosing=false}){m->moduleId=m.id;record="";choosing=false;opened=false}}
+                    if(!wide&&choosing){HorizontalDivider();MobileModuleSheet(SchoolModules.visible(category,user.roles,minor),category,moduleId,lang,busy,Modifier.height(pickerHeight),{choosing=false}){m->moduleId=m.id;record="";choosing=false;opened=false}}
                     HorizontalDivider()
                     Row(Modifier.fillMaxWidth()){
                         tabs.forEachIndexed{j,name->TextButton(onClick={if(name==category&&!wide){choosing=!choosing}else{category=name;moduleId=SchoolModules.visible(name,user.roles,minor).first().id;record="";choosing=!wide;opened=wide}},enabled=!busy,modifier=Modifier.weight(1f),contentPadding=PaddingValues(2.dp)){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(listOf("◉","▤","▦","☆","○")[j],style=MaterialTheme.typography.titleLarge);Text(ModuleNavigation.label(name,lang),style=MaterialTheme.typography.labelSmall,fontWeight=if(category==name)FontWeight.Bold else FontWeight.Normal,maxLines=2)}}}
