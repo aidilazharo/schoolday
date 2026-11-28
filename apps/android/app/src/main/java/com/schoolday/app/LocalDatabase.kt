@@ -9,7 +9,7 @@ import javax.crypto.spec.PBEKeySpec
 data class Account(val id:String,val name:String,val email:String,val roles:String)
 data class ChatSpace(val id:String,val title:String)
 data class Draft(val id:String,val text:String)
-class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,5){
+class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,6){
     override fun onConfigure(db:SQLiteDatabase){db.setForeignKeyConstraintsEnabled(true)}
     override fun onCreate(db:SQLiteDatabase){
         val schema = """
@@ -61,9 +61,10 @@ INSERT OR IGNORE INTO roles VALUES ('normal','Member');
 INSERT OR IGNORE INTO memberships VALUES ('normal','open');
         """.trimIndent()
         schema.split(";").map{it.trim()}.filter{it.isNotEmpty()&&!it.startsWith("PRAGMA")}.forEach{db.execSQL(it)}
-        migrateNames(db);migrateWall(db);migrateTimeline(db);migrateFamily(db)
+        migrateNames(db);migrateWall(db);migrateTimeline(db);migrateFamily(db);migrateUnified(db)
     }
-    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db);if(oldVersion<3)migrateWall(db);if(oldVersion<4)migrateTimeline(db);if(oldVersion<5)migrateFamily(db)}
+    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db);if(oldVersion<3)migrateWall(db);if(oldVersion<4)migrateTimeline(db);if(oldVersion<5)migrateFamily(db);if(oldVersion<6)migrateUnified(db)}
+    private fun migrateUnified(db:SQLiteDatabase){db.execSQL("INSERT OR IGNORE INTO wall_posts(id,channel_id,author_id,body,created_at) SELECT 'chat:'||id,channel_id,author_id,body,created_at FROM space_messages;")}
     private fun migrateFamily(db:SQLiteDatabase){
         listOf(
             """CREATE TABLE IF NOT EXISTS demographics(user_id TEXT PRIMARY KEY REFERENCES users(id),age INTEGER NOT NULL CHECK(age BETWEEN 5 AND 120))""",

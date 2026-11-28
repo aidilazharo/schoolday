@@ -19,7 +19,7 @@ private data class TimelineEntry(val id:String,val time:Long,val post:WallPost?=
  fun t(key:String)=SchooldayLanguage.text(key,lang)
  var posts by remember(channel){mutableStateOf(emptyList<WallPost>())}
  var messages by remember(channel){mutableStateOf(emptyList<SpaceMessage>())}
- var isPost by remember(channel){mutableStateOf(false)}
+ val expanded=remember(channel){mutableStateMapOf<String,Boolean>()}
  var text by remember(channel){mutableStateOf("")}
  val comments=remember(channel){mutableStateMapOf<String,String>()}
  var failed by remember(channel){mutableStateOf(false)}
@@ -48,32 +48,30 @@ private data class TimelineEntry(val id:String,val time:Long,val post:WallPost?=
      }
     }
    }else if(post!=null){
-   OutlinedCard(Modifier.fillMaxWidth()){Column(Modifier.padding(12.dp),verticalArrangement=Arrangement.spacedBy(10.dp)){
-    Text(post.name,fontWeight=FontWeight.Bold)
-    Text(java.text.DateFormat.getDateInstance().format(java.util.Date(post.createdAt)),style=MaterialTheme.typography.bodySmall)
-    Text(post.body)
-    HorizontalDivider()
-    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){
-     TextButton(onClick={act("like","",post.id)},enabled=!busy){Text((if(post.liked)"♥ " else "♡ ")+t("Like")+" ("+post.likes+")")}
-     Text(t("Comments")+" ("+post.comments.size+")",modifier=Modifier.padding(top=12.dp))
+   Row(Modifier.fillMaxWidth(),horizontalArrangement=if(post.authorId==user.id)Arrangement.End else Arrangement.Start){
+    Surface(shape=RoundedCornerShape(12.dp),color=MaterialTheme.colorScheme.surfaceVariant){
+     Column(Modifier.widthIn(max=if(post.body.length>180||expanded[post.id]==true)600.dp else 420.dp).padding(12.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){
+      if(post.authorId!=user.id)Text(post.name,fontWeight=FontWeight.Bold,style=MaterialTheme.typography.labelMedium)
+      Text(post.body)
+      Text(java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT).format(java.util.Date(post.createdAt))+" · "+t("Local only"),style=MaterialTheme.typography.labelSmall)
+      Row(horizontalArrangement=Arrangement.spacedBy(6.dp)){
+       TextButton(onClick={act("like","",post.id)},enabled=!busy){Text((if(post.liked)"♥ " else "♡ ")+post.likes)}
+       TextButton(onClick={expanded[post.id]=expanded[post.id]!=true}){Text(t("Comments")+" ("+post.comments.size+")")}
+      }
+      if(expanded[post.id]==true){
+       post.comments.forEach{comment->Surface(shape=RoundedCornerShape(8.dp)){Column(Modifier.padding(8.dp)){Text(comment.name,fontWeight=FontWeight.Bold);Text(comment.body)}}}
+       Row(verticalAlignment=Alignment.CenterVertically){OutlinedTextField(comments[post.id]?:"",{comments[post.id]=it.take(500)},placeholder={Text(t("Comment"))},modifier=Modifier.weight(1f));TextButton(onClick={act("comment",comments[post.id]?:"",post.id)},enabled=!busy&&!comments[post.id].isNullOrBlank()){Text(t("Send"))}}
+      }
+     }
     }
-    post.comments.forEach{comment->Surface(shape=RoundedCornerShape(8.dp),color=MaterialTheme.colorScheme.surfaceVariant){Column(Modifier.fillMaxWidth().padding(8.dp)){Text(comment.name,fontWeight=FontWeight.Bold);Text(comment.body)}}}
-    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){
-     OutlinedTextField(comments[post.id]?:"",{comments[post.id]=it.take(500)},placeholder={Text(t("Comment"))},modifier=Modifier.weight(1f))
-     TextButton(onClick={act("comment",comments[post.id]?:"",post.id)},enabled=!busy&&!comments[post.id].isNullOrBlank()){Text(t("Comment"))}
-    }
-   }}
+   }
    }
   }
  }
  HorizontalDivider()
- Row(Modifier.fillMaxWidth().padding(8.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
-  if(!isPost)Button(onClick={isPost=false},enabled=!busy,modifier=Modifier.weight(1f)){Text(t("Chat"))} else OutlinedButton(onClick={isPost=false},enabled=!busy,modifier=Modifier.weight(1f)){Text(t("Chat"))}
-  if(isPost)Button(onClick={isPost=true},enabled=!busy,modifier=Modifier.weight(1f)){Text(t("Post"))} else OutlinedButton(onClick={isPost=true},enabled=!busy,modifier=Modifier.weight(1f)){Text(t("Post"))}
- }
  Row(Modifier.fillMaxWidth().padding(8.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
-  OutlinedTextField(text,{text=it.take(if(isPost)2000 else 500)},placeholder={Text(t(if(isPost)"Write a post" else "Message"))},modifier=Modifier.weight(1f),minLines=if(isPost)3 else 1,maxLines=5)
-  Button(onClick={act(if(isPost)"post" else "chat",text)},enabled=!busy&&text.isNotBlank()&&text.length<=(if(isPost)2000 else 500)){Text(t(if(isPost)"Post" else "Send"))}
+  OutlinedTextField(text,{text=it.take(2000)},placeholder={Text(t("Message"))},modifier=Modifier.weight(1f),minLines=1,maxLines=5)
+  Button(onClick={act("post",text)},enabled=!busy&&text.isNotBlank()&&text.length<=2000){Text(t("Send"))}
  }
  }
  if(failed)AlertDialog(onDismissRequest={failed=false},title={Text(t("Unable to save locally."))},confirmButton={TextButton(onClick={failed=false}){Text(t("OK"))}})

@@ -82,7 +82,7 @@ private struct Workspace:View {
         GeometryReader{ geo in
             let wide=geo.size.width>=768
             HStack(spacing:0){
-                if wide || !opened {sidebar.frame(width:wide ? min(geo.size.width*0.32,420):geo.size.width)}
+                if wide || !opened {Group {if showProfile {profileView} else {sidebar}}.frame(width:wide ? min(max(geo.size.width*0.36,290),420):geo.size.width)}
                 if wide{Divider()}
                 if wide || opened{chat(wide:wide)}
             }
@@ -90,7 +90,6 @@ private struct Workspace:View {
             do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
         }
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
-        .sheet(isPresented:$showProfile){profileView}
         .sheet(isPresented:$showRewards){NavigationStack{Form{FamilyFeatures(db:db,user:user,screen:"Rewards",onChange:refreshPoints)}.navigationTitle(t("Rewards")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showRewards=false}}}}}
         .sheet(isPresented:$showQuiz){NavigationStack{Form{FamilyFeatures(db:db,user:user,screen:"Quiz",onChange:refreshPoints)}.navigationTitle(t("Quiz")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showQuiz=false}}}}}
     }
