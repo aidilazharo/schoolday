@@ -1,46 +1,53 @@
-import { useState, type FormEvent } from 'react';
-import { createRoot } from 'react-dom/client';
-import { loadDrafts, saveDrafts } from './storage';
+import {useEffect,useState,type FormEvent} from 'react';
+import {createRoot} from 'react-dom/client';
+import type {Database} from 'sql.js';
+import {openDatabase,samples,login,channels,drafts,write,type User,type Draft} from './database';
 import './style.css';
 
-function App() {
-  const [drafts, setDrafts] = useState(loadDrafts);
-  const [text, setText] = useState('');
-  const [error, setError] = useState('');
-  const [opened, setOpened] = useState(false);
-  function save(event: FormEvent) {
-    event.preventDefault();
-    if (!text.trim()) return;
-    const next = [...drafts, {id: crypto.randomUUID(), text: text.trim(), createdAt: Date.now()}];
-    try { saveDrafts(next); setDrafts(next); setText(''); setError(''); }
-    catch { setError('Unable to save locally. Your draft was retained.'); }
+function App(){
+  const [db,setDb]=useState<Database|null>(null);
+  const [user,setUser]=useState<User|null>(null);
+  const [error,setError]=useState('');
+  const [normal,setNormal]=useState(false);
+  const [email,setEmail]=useState('');
+  const [password,setPassword]=useState('');
+  const [busy,setBusy]=useState(false);
+  useEffect(()=>{openDatabase().then(setDb).catch(()=>setError('Unable to open the local database.'))},[]);
+  async function signIn(e:FormEvent){
+    e.preventDefault();if(!db||busy)return;setBusy(true);setError('');
+    try{const u=await login(db,email,password);if(u){setUser(u);setPassword('')}else setError('Invalid email or password.')}
+    catch{setError('Sign-in unavailable.')}finally{setBusy(false)}
   }
-  function clear() {
-    if (!window.confirm('Clear local drafts?')) return;
-    try { saveDrafts([]); setDrafts([]); setError(''); } catch { setError('Unable to clear local drafts.'); }
-  }
-  return <main className={opened ? 'app chat-open' : 'app'}>
-    <aside className="sidebar" aria-label="Chats">
-      <header><div className="brand">schoolday</div><span className="status">Local only</span></header>
-      <h1>Chats</h1>
-      <button className="chat-item" onClick={()=>setOpened(true)}>
-        <span className="avatar" aria-hidden="true">S</span>
-        <span className="chat-label"><strong>Local outbox</strong><small>{drafts.at(-1)?.text ?? 'No saved messages'}</small></span>
-        <span className="chevron" aria-hidden="true">›</span>
-      </button>
-    </aside>
-    <section className="chat-panel" aria-label="Local outbox">
-    <header><div><h2>Local outbox</h2><small>Local only</small></div><div className="actions"><button className="quiet" onClick={clear} disabled={!drafts.length}>Clear</button><button className="quiet back" onClick={()=>setOpened(false)}>Back</button></div></header>
-    <section className="conversation" aria-label="Local draft conversation">
-      {drafts.length === 0 ? <div className="empty"><h2>No saved messages</h2><p>Save a local test message below.</p></div> :
-      drafts.map(d => <article key={d.id}><div>{d.text}</div><small>Saved locally · Not sent</small></article>)}
-    </section>
-    {error && <p role="alert">{error}</p>}
-    <form onSubmit={save}><input aria-label="Test message" placeholder="Message" maxLength={500} value={text} onChange={e=>setText(e.target.value)}/><button type="submit" disabled={!text.trim()}>Save</button></form>
-    </section>
+  if(user&&db)return <Workspace key={user.id} db={db} user={user} logout={()=>{setUser(null);setNormal(false);setEmail('');setPassword('');setError('')}}/>;
+  return <main className="login-screen"><section className="login-card">
+    <div className="brand">schoolday</div><h1>Sign in</h1>
+    <label htmlFor="sample">Sample user</label>
+    <select id="sample" value="" disabled={!db||busy} onChange={e=>{const u=db&&samples(db).find(p=>p.id===e.target.value);if(u){setError('');setUser(u)}}}>
+      <option value="">Select sample user</option>{db&&samples(db).map(u=><option key={u.id} value={u.id}>{u.name} — {u.roles}</option>)}
+    </select>
+    <button className="primary" disabled={!db||busy} onClick={()=>{setNormal(!normal);setError('')}}>{normal?'Hide login form':'Normal user login'}</button>
+    {normal&&<form className="login-form" onSubmit={signIn}><label htmlFor="email">Email</label><input id="email" type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} required/><label htmlFor="password">Password</label><input id="password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/><button type="submit" disabled={busy}>Login</button></form>}
+    <small>Local test accounts only. Do not enter real credentials.</small>{error&&<p role="alert">{error}</p>}
+  </section></main>;
+}
+function Workspace({db,user,logout}:{db:Database;user:User;logout:()=>void}){
+  const spaces=channels(db,user);
+  const [selected,setSelected]=useState(spaces[0]?.id??'');
+  const [opened,setOpened]=useState(false);
+  const [messages,setMessages]=useState<Draft[]>(()=>drafts(db,user,selected));
+  const [text,setText]=useState('');
+  const [error,setError]=useState('');
+  const [busy,setBusy]=useState(false);
+  function select(id:string){setSelected(id);setMessages(drafts(db,user,id));setText('');setError('');setOpened(true)}
+  async function change(value:string|null){if(busy)return;setBusy(true);setError('');try{await write(db,user,selected,value);setMessages(drafts(db,user,selected));if(value!==null)setText('')}catch{setError('Unable to save locally.')}finally{setBusy(false)}}
+  return <main className={opened?'app chat-open':'app'}>
+    <aside className="sidebar"><header><div className="brand">schoolday</div><button className="quiet" disabled={busy} onClick={logout}>Logout</button></header>
+    <div className="profile"><strong>{user.name}</strong><small>{user.roles}</small></div><h1>Chats</h1>
+    {spaces.map(c=><button key={c.id} className={'chat-item '+(selected===c.id?'selected':'')} disabled={busy} onClick={()=>select(c.id)}><span className="avatar" aria-hidden="true">{c.title[0]}</span><span className="chat-label"><strong>{c.title}</strong><small>Local only</small></span><span className="chevron">›</span></button>)}</aside>
+    <section className="chat-panel"><header><div><h2>{spaces.find(c=>c.id===selected)?.title}</h2><small>Local only</small></div><div className="actions"><button className="quiet" disabled={busy||!messages.length} onClick={()=>{if(confirm('Clear local drafts?'))void change(null)}}>Clear</button><button className="quiet back" onClick={()=>setOpened(false)}>Back</button></div></header>
+    <section className="conversation">{messages.length?messages.map(m=><article key={m.id}>{m.text}<small>Saved locally · Not sent</small></article>):<div className="empty"><h2>No saved messages</h2></div>}</section>
+    {error&&<p role="alert">{error}</p>}<form onSubmit={e=>{e.preventDefault();if(text.trim())void change(text.trim())}}><input aria-label="Message" placeholder="Message" maxLength={500} value={text} onChange={e=>setText(e.target.value)}/><button disabled={busy||!text.trim()}>Save</button></form></section>
   </main>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => { navigator.serviceWorker.register(import.meta.env.BASE_URL+'sw.js').catch(console.warn); });
-}
+if(import.meta.env.PROD&&'serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register(import.meta.env.BASE_URL+'sw.js').catch(console.warn));

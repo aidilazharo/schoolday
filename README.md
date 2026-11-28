@@ -30,3 +30,7 @@ Next: authenticated identity/key exchange, secure encrypted storage, BLE/Wi-Fi a
 Protocol v0 uses JSON for inspectable interoperability fixtures; the radio format (e.g. CBOR) will be specified before transmission. See shared/protocol. Bundle identifiers are provisional. Native platform restrictions still apply.
 
 See docs/architecture.md and firmware/esp32-lora/README.md.
+
+## Local account testing (development only)
+
+All three clients use SQLite: system SQLite on mobile and sql.js (SQLite WASM) with IndexedDB snapshots on web. Five fictional sample profiles are available via dropdown. Normal user login tests a provisioned local account: `member@example.invalid` / `SchooldayTest2026!`. This is a public development credential, not production authentication. The local password verifier uses PBKDF2-HMAC-SHA256 with 600,000 iterations. No account registration, remote authentication, verified school affiliation, encrypted storage or real inter-device communication is provided. Never enter real credentials or student data. Sample membership rules are fixed test data, not real school authorization. Each draft is scoped by account and channel. Previous anonymous outbox data is not imported, because its ownership cannot be determined. Web SQLite snapshots are intended for single-tab testing; multiple tabs can overwrite each other's snapshots. First use needs online access to load WASM. Desktop remains browser-based.

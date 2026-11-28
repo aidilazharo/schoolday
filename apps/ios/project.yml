@@ -10,6 +10,8 @@ targets:
     type: application
     platform: iOS
     sources: [Schoolday]
+    dependencies:
+      - sdk: libsqlite3.tbd
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.schoolday.app
