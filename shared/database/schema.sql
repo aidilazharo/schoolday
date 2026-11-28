@@ -142,3 +142,6 @@ CREATE TRIGGER IF NOT EXISTS feature_attendance AFTER INSERT ON feature_actions 
 CREATE TRIGGER IF NOT EXISTS feature_accept AFTER INSERT ON feature_actions WHEN NEW.kind='accept' BEGIN SELECT CASE WHEN NOT (EXISTS(SELECT 1 FROM identity_requests WHERE actor=NEW.target AND target=NEW.actor AND kind='friend' AND status='pending')) THEN RAISE(ABORT,'Incoming friend request required') END;UPDATE identity_requests SET status='accepted' WHERE actor=NEW.target AND target=NEW.actor AND kind='friend'; END;
 
 INSERT OR IGNORE INTO wall_posts(id,channel_id,author_id,body,created_at) SELECT 'chat:'||id,channel_id,author_id,body,created_at FROM space_messages;
+
+CREATE TABLE IF NOT EXISTS workspace_drafts(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL REFERENCES users(id),kind TEXT NOT NULL CHECK(kind IN ('Quiz','Certificates','Calendar')),title TEXT NOT NULL CHECK(length(trim(title)) BETWEEN 1 AND 120),details TEXT NOT NULL CHECK(length(trim(details)) BETWEEN 1 AND 4000),created_at INTEGER NOT NULL);
+CREATE TRIGGER IF NOT EXISTS workspace_drafts_staff BEFORE INSERT ON workspace_drafts BEGIN SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM roles WHERE user_id=NEW.owner_id AND role IN ('Teacher','School Admin')) THEN RAISE(ABORT,'Staff role required') END; END;

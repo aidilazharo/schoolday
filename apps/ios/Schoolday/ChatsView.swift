@@ -62,9 +62,10 @@ private struct Workspace:View {
     let user:Account
     @AppStorage private var lang:String
     @AppStorage private var country:String
-    @State private var showProfile=false
-    @State private var showRewards=false
-    @State private var showQuiz=false
+    @State private var tab="Chats"
+    @State private var showDrafts=false
+    private var staff:Bool{user.roles.components(separatedBy:" + ").contains("Teacher") || user.roles.components(separatedBy:" + ").contains("School Admin")}
+    private let tabs=["Chats","Calendar","Quiz","Rewards","Certificates","Profile"]
     @State private var points=0
     @State private var displayName=""
     init(db:LocalDatabase,user:Account,logout:@escaping ()->Void){
@@ -82,31 +83,47 @@ private struct Workspace:View {
         GeometryReader{ geo in
             let wide=geo.size.width>=768
             HStack(spacing:0){
-                if wide || !opened {Group {if showProfile {profileView} else {sidebar}}.frame(width:wide ? min(max(geo.size.width*0.36,290),420):geo.size.width)}
+                if wide || !opened {sidebar.frame(width:wide ? min(max(geo.size.width*0.30,250),390):geo.size.width)}
                 if wide{Divider()}
-                if wide || opened{chat(wide:wide)}
+                if wide || opened{if tab=="Chats"{chat(wide:wide)}else{detail(wide:wide)}}
             }
         }.task{
             do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
         }
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
-        .sheet(isPresented:$showRewards){NavigationStack{Form{FamilyFeatures(db:db,user:user,screen:"Rewards",onChange:refreshPoints)}.navigationTitle(t("Rewards")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showRewards=false}}}}}
-        .sheet(isPresented:$showQuiz){NavigationStack{Form{FamilyFeatures(db:db,user:user,screen:"Quiz",onChange:refreshPoints)}.navigationTitle(t("Quiz")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showQuiz=false}}}}}
     }
     private var sidebar:some View {
         VStack(alignment:.leading,spacing:0){
-            HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button {showProfile=true} label:{Image(systemName:"person.crop.circle").frame(minWidth:44,minHeight:44)}.accessibilityLabel(t("Profile"));Button(t("Logout"),action:logout)}.padding()
+            HStack{Text("schoolday").font(.system(size:26,weight:.bold,design:.serif)).italic();Spacer();Button(t("Logout"),action:logout)}.padding()
             Divider()
-            HStack{Spacer();Button{showQuiz=true}label:{Image(systemName:"list.bullet.clipboard")}.accessibilityLabel(t("Quiz"));Button{showRewards=true}label:{Label(t("Rewards"),systemImage:"star")}}.padding()
             ScrollView{
-                ForEach(spaces){space in
-                    Button{select(space.id,open:true)}label:{
-                        HStack{Text(String(t(space.title).prefix(1))).font(.headline).frame(width:44,height:44).background(.thinMaterial,in:Circle());Text(t(space.title)).font(.headline);Spacer();Image(systemName:"chevron.right").font(.caption)}.padding().contentShape(Rectangle()).background(selected==space.id ? Color.primary.opacity(0.06):Color.clear)
-                    }.buttonStyle(.plain)
-                    Divider()
+                if tab=="Chats"{
+                    ForEach(spaces){space in
+                        Button{select(space.id,open:true)}label:{HStack{Text(String(t(space.title).prefix(1))).font(.headline).frame(width:44,height:44).background(.thinMaterial,in:Circle());Text(t(space.title)).font(.headline);Spacer();Image(systemName:"chevron.right")}.padding().contentShape(Rectangle()).background(selected==space.id ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain)
+                        Divider()
+                    }
+                }else{
+                    Button{showDrafts=false;opened=true}label:{HStack{Text(t(tab=="Quiz" ? "My quizzes":tab=="Profile" ? "Personal information":tab));Spacer();Image(systemName:"chevron.right")}.padding().frame(maxWidth:.infinity,alignment:.leading).background(!showDrafts ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain)
+                    if staff && ["Quiz","Certificates","Calendar"].contains(tab){Button{showDrafts=true;opened=true}label:{HStack{Text(t("Create draft"));Spacer();Image(systemName:"chevron.right")}.padding().background(showDrafts ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain)}
                 }
             }
+            Divider()
+            HStack(spacing:0){
+                ForEach(Array(tabs.enumerated()),id:\.offset){entry in
+                    Button{tab=entry.element;showDrafts=false;opened=false}label:{VStack(spacing:4){Image(systemName:["bubble.left","calendar","list.bullet.clipboard","star","rosette","person.crop.circle"][entry.offset]).font(.system(size:19));Text(t(entry.element)).font(.system(size:9)).lineLimit(2).multilineTextAlignment(.center)}.frame(maxWidth:.infinity,minHeight:48).foregroundStyle(tab==entry.element ? Color.primary:Color.secondary)}.buttonStyle(.plain)
+                }
+            }.padding(.horizontal,4)
         }
+    }
+    private func detail(wide:Bool)->some View{
+        VStack(spacing:0){
+            HStack{Text(t(showDrafts ? "Create draft":tab)).font(.headline);Spacer();if !wide{Button(t("Back")){opened=false}}}.padding()
+            Divider()
+            if showDrafts && staff && ["Quiz","Certificates","Calendar"].contains(tab){WorkspaceEditor(db:db,user:user,kind:tab,lang:lang).id(tab)}
+            else if tab=="Profile"{profileView}
+            else if tab=="Rewards" || tab=="Quiz"{Form{FamilyFeatures(db:db,user:user,screen:tab,onChange:refreshPoints)}.id(tab)}
+            else{Spacer();Text(t(tab=="Certificates" ? "No certificates available.":"No events available.")).foregroundStyle(.secondary);Spacer()}
+        }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
     private var nicknameMenu:some View {
         VStack(alignment:.leading,spacing:6) {
@@ -119,8 +136,7 @@ private struct Workspace:View {
         }
     }
     private var profileView:some View {
-        NavigationStack {
-            Form {
+        Form {
                 Section {
                     Text(t("Full name")).font(.caption).foregroundStyle(.secondary)
                     Text(user.name).font(.headline)
@@ -134,9 +150,7 @@ private struct Workspace:View {
                     HStack {Text(t("Country / region"));Spacer();CountryMenu(country:$country,language:lang)}
                 }
                 FamilyFeatures(db:db,user:user,screen:"Profile",onChange:refreshPoints)
-            }.navigationTitle(t("Profile"))
-             .toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showProfile=false}}}
-        }
+            }
     }
     private func refreshPoints(){points=(try? db.points(user)) ?? points}
     private func chat(wide:Bool)->some View {
@@ -146,5 +160,5 @@ private struct Workspace:View {
             if !selected.isEmpty {WallView(db:db,user:user,channel:selected,lang:lang).id(selected)}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
-    private func select(_ id:String,open:Bool){selected=id;if open{opened=true}}
+    private func select(_ id:String,open:Bool){tab="Chats";selected=id;if open{opened=true}}
 }

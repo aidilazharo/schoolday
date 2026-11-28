@@ -76,3 +76,7 @@ Eight local accounts including children ages 8, 11 and 15 linked to the two samp
 One composer sends shared text to the existing social content table. Short messages render as bubbles, longer messages and expanded discussion threads widen automatically. Every shared message supports likes and expandable comments. Migration v6 copies previous shared messages into the social table with stable chat-prefixed IDs and excludes duplicates from the legacy query. Private unsent drafts remain private and non-interactive. Existing posts, reactions, comments, membership and points are retained. Profile occupies the left pane on wide screens while the active conversation remains visible; compact screens show one pane. Media and private replies remain future work.
 
 Conversation rows span the entire chat pane on all screen widths, with a small 12-unit inset on each side. Incoming messages align left and outgoing messages right; the readable bubble-width limit remains independent of row width.
+
+## Context-aware workspace
+
+At widths of 768 and above, a narrow left navigation/list pane and larger right detail pane are always retained. Chats render only in Chats; Profile, Rewards, Quiz, Calendar and Certificates replace the right detail pane. Compact screens use list/detail navigation. Teachers and school administrators can save local private quiz, certificate and event drafts. These are text-based authoring drafts, not published quizzes, issued certificates or scheduled events. SQLite v7 enforces staff-only creation. No permissions, points or chat data are reset.

@@ -86,9 +86,10 @@ class MainActivity:ComponentActivity(){
     fun setLang(value:String){lang=value;prefs.edit().putString("language."+user.id,value).apply()}
     var country by remember(user.id){mutableStateOf(SchooldayCountry.normalize(prefs.getString("country."+user.id,null)))}
     fun setCountry(value:String){country=value;prefs.edit().putString("country."+user.id,value).apply()}
-    var showProfile by remember{mutableStateOf(false)}
-    var showRewards by remember{mutableStateOf(false)}
-    var showQuiz by remember{mutableStateOf(false)}
+    var tab by remember{mutableStateOf("Chats")}
+    var showDrafts by remember{mutableStateOf(false)}
+    val staff=user.roles.split(" + ").any{it=="Teacher"||it=="School Admin"}
+    val tabs=listOf("Chats","Calendar","Quiz","Rewards","Certificates","Profile")
     var points by remember{mutableStateOf(0)}
     var displayName by remember{mutableStateOf(SchooldayNames.options(user.name).firstOrNull()?:user.name)}
     var nicknameMenu by remember{mutableStateOf(false)}
@@ -102,13 +103,37 @@ class MainActivity:ComponentActivity(){
     LaunchedEffect(user.id){try{displayName=withContext(Dispatchers.IO){db.nickname(user)};points=withContext(Dispatchers.IO){db.points(user)};spaces=withContext(Dispatchers.IO){db.spaces(user)};selected=spaces.firstOrNull()?.id?:""}catch(e:Exception){error=true}}
     BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding()){
         val wide=maxWidth>=768.dp
-        val sidebarWidth=(maxWidth*0.36f).coerceIn(290.dp,420.dp)
+        val sidebarWidth=(maxWidth*0.30f).coerceIn(250.dp,390.dp)
         BackHandler(enabled=!wide&&opened){if(!busy)opened=false}
         Row(Modifier.fillMaxSize()){
             if(wide||!opened){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
-                    if(showProfile){Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
-                    Text(t("Profile"),style=MaterialTheme.typography.headlineSmall)
+                    Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
+                    HorizontalDivider()
+                    LazyColumn(Modifier.weight(1f)){
+                        if(tab=="Chats"){items(spaces,key={it.id}){space->TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")};HorizontalDivider()}}
+                        else{
+                            item{TextButton(onClick={showDrafts=false;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(if(tab=="Quiz")"My quizzes" else if(tab=="Profile")"Personal information" else tab),modifier=Modifier.weight(1f));Text("›")}}
+                            if(staff&&tab in listOf("Quiz","Certificates","Calendar"))item{TextButton(onClick={showDrafts=true;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t("Create draft"),modifier=Modifier.weight(1f));Text("›")}}
+                        }
+                    }
+                    HorizontalDivider()
+                    Row(Modifier.fillMaxWidth()){
+                        tabs.forEachIndexed{j,name->TextButton(onClick={tab=name;showDrafts=false;opened=false},enabled=!busy,modifier=Modifier.weight(1f),contentPadding=PaddingValues(2.dp)){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(listOf("◉","▦","▤","☆","◇","○")[j],style=MaterialTheme.typography.titleLarge);Text(t(name),style=MaterialTheme.typography.labelSmall,fontWeight=if(tab==name)FontWeight.Bold else FontWeight.Normal,maxLines=2)}}}
+                    }
+                }
+            }
+            if(wide)VerticalDivider()
+            if(wide||opened){
+                Column(Modifier.weight(1f).fillMaxHeight()){
+                    Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically){
+                        Column(Modifier.weight(1f)){Text(t(if(tab=="Chats")spaces.firstOrNull{it.id==selected}?.title?:"Chats" else if(showDrafts)"Create draft" else tab),fontWeight=FontWeight.Bold);if(tab=="Chats")Text(t("Local only"),style=MaterialTheme.typography.bodySmall)}
+                        if(!wide)TextButton(onClick={opened=false},enabled=!busy){Text(t("Back"))}
+                    }
+                    HorizontalDivider()
+                    if(tab=="Chats"){if(selected.isNotEmpty())key(selected){WallView(db,user,selected,lang,busy,{busy=it},Modifier.weight(1f))}}
+                    else if(showDrafts&&staff&&tab in listOf("Quiz","Certificates","Calendar"))key(tab){WorkspaceEditor(db,user,tab,lang,Modifier.weight(1f))}
+                    else if(tab=="Profile")Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
                     Text(t("Full name"),style=MaterialTheme.typography.bodySmall)
                     Text(user.name,fontWeight=FontWeight.Bold)
                     Text(t("Nickname"),style=MaterialTheme.typography.bodySmall)
@@ -130,32 +155,13 @@ class MainActivity:ComponentActivity(){
                     LanguageMenu(lang,::setLang)
                     CountryMenu(country,lang,::setCountry)
                     FamilyFeatures(db,user,"Profile"){points=db.points(user)}
-                    Button(onClick={showProfile=false},modifier=Modifier.fillMaxWidth()){Text(t("Done"))}
-                    }}else{
-                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);TextButton(onClick={showProfile=true},enabled=!busy){Text(t("Profile"))};TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
-                    HorizontalDivider()
-                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Spacer(Modifier.weight(1f));TextButton(onClick={showQuiz=true}){Text(t("Quiz"))};TextButton(onClick={showRewards=true}){Text(t("Rewards"))}}
-                    LazyColumn{items(spaces,key={it.id}){space->
-                        TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")}
-                        HorizontalDivider()
-                    }}
+
                     }
-                }
-            }
-            if(wide)VerticalDivider()
-            if(wide||opened){
-                Column(Modifier.weight(1f).fillMaxHeight()){
-                    Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically){
-                        Column(Modifier.weight(1f)){Text(t(spaces.firstOrNull{it.id==selected}?.title?:"Chats"),fontWeight=FontWeight.Bold);Text(t("Local only"),style=MaterialTheme.typography.bodySmall)}
-                        if(!wide)TextButton(onClick={opened=false},enabled=!busy){Text(t("Back"))}
-                    }
-                    HorizontalDivider()
-                    if(selected.isNotEmpty())key(selected){WallView(db,user,selected,lang,busy,{busy=it},Modifier.weight(1f))}
+                    else if(tab=="Rewards"||tab=="Quiz")key(tab){Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp)){FamilyFeatures(db,user,tab){points=db.points(user)}}}
+                    else Box(Modifier.weight(1f).fillMaxWidth(),contentAlignment=Alignment.Center){Text(t(if(tab=="Certificates")"No certificates available." else "No events available."))}
                 }
             }
         }
     }
-    if(showRewards) FeatureDialog(db,user,"Rewards",{showRewards=false},{points=db.points(user)})
-    if(showQuiz) FeatureDialog(db,user,"Quiz",{showQuiz=false},{points=db.points(user)})
     if(error)AlertDialog(onDismissRequest={error=false},title={Text(t("Local database unavailable"))},confirmButton={TextButton(onClick={error=false}){Text(t("OK"))}})
 }

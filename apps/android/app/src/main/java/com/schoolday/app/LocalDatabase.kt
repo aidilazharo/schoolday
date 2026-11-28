@@ -9,7 +9,7 @@ import javax.crypto.spec.PBEKeySpec
 data class Account(val id:String,val name:String,val email:String,val roles:String)
 data class ChatSpace(val id:String,val title:String)
 data class Draft(val id:String,val text:String)
-class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,6){
+class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,7){
     override fun onConfigure(db:SQLiteDatabase){db.setForeignKeyConstraintsEnabled(true)}
     override fun onCreate(db:SQLiteDatabase){
         val schema = """
@@ -61,9 +61,10 @@ INSERT OR IGNORE INTO roles VALUES ('normal','Member');
 INSERT OR IGNORE INTO memberships VALUES ('normal','open');
         """.trimIndent()
         schema.split(";").map{it.trim()}.filter{it.isNotEmpty()&&!it.startsWith("PRAGMA")}.forEach{db.execSQL(it)}
-        migrateNames(db);migrateWall(db);migrateTimeline(db);migrateFamily(db);migrateUnified(db)
+        migrateNames(db);migrateWall(db);migrateTimeline(db);migrateFamily(db);migrateUnified(db);migrateWorkspace(db)
     }
-    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db);if(oldVersion<3)migrateWall(db);if(oldVersion<4)migrateTimeline(db);if(oldVersion<5)migrateFamily(db);if(oldVersion<6)migrateUnified(db)}
+    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db);if(oldVersion<3)migrateWall(db);if(oldVersion<4)migrateTimeline(db);if(oldVersion<5)migrateFamily(db);if(oldVersion<6)migrateUnified(db);if(oldVersion<7)migrateWorkspace(db)}
+    private fun migrateWorkspace(db:SQLiteDatabase){db.execSQL("CREATE TABLE IF NOT EXISTS workspace_drafts(id TEXT PRIMARY KEY,owner_id TEXT NOT NULL REFERENCES users(id),kind TEXT NOT NULL CHECK(kind IN ('Quiz','Certificates','Calendar')),title TEXT NOT NULL CHECK(length(trim(title)) BETWEEN 1 AND 120),details TEXT NOT NULL CHECK(length(trim(details)) BETWEEN 1 AND 4000),created_at INTEGER NOT NULL)");db.execSQL("CREATE TRIGGER IF NOT EXISTS workspace_drafts_staff BEFORE INSERT ON workspace_drafts BEGIN SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM roles WHERE user_id=NEW.owner_id AND role IN ('Teacher','School Admin')) THEN RAISE(ABORT,'Staff role required') END; END")}
     private fun migrateUnified(db:SQLiteDatabase){db.execSQL("INSERT OR IGNORE INTO wall_posts(id,channel_id,author_id,body,created_at) SELECT 'chat:'||id,channel_id,author_id,body,created_at FROM space_messages;")}
     private fun migrateFamily(db:SQLiteDatabase){
         listOf(
