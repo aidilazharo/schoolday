@@ -5,5 +5,5 @@ const translations: Record<Language,Record<string,string>> = {"en":{"Language":"
 export function normalizeLanguage(value:string|null):Language {return languages.some(([id])=>id===value)?value as Language:'ms'}
 export function translate(lang:Language,key:string):string{return translations[lang][key]??key}
 export function translateRoles(lang:Language,roles:string):string{return roles.split(' + ').map(role=>translate(lang,role)).join(' + ')}
-export function savedLanguage():Language{try{return normalizeLanguage(localStorage.getItem('schoolday.language'))}catch{return 'ms'}}
-export function saveLanguage(lang:Language){try{localStorage.setItem('schoolday.language',lang)}catch{/* session preference still works */}}
+export function savedLanguage(userId:string):Language{try{return normalizeLanguage(localStorage.getItem('schoolday.language.'+userId))}catch{return 'ms'}}
+export function saveLanguage(lang:Language,userId:string){try{localStorage.setItem('schoolday.language.'+userId,lang)}catch{/* session preference still works */}}

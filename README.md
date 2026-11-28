@@ -41,8 +41,10 @@ Reconstructed monochrome text-only branding from the previous Schoolday design r
 
 ## Languages
 
-Bahasa Melayu (default), English, Simplified Chinese and Tamil are available in the login and account sidebar. Preference is stored locally on each device, independent of account. Stable database roles/channel IDs and user-authored messages are not translated. Translation keys live in shared/translations; native and web dictionaries are embedded so the UI can switch offline. Other Malaysian languages may be added later.
+Bahasa Melayu (default), English, Simplified Chinese and Tamil are available only in the signed-in Profile. Preferences are stored locally per account on each device. Stable database roles/channel IDs and user-authored messages are not translated. Translation keys live in shared/translations; native and web dictionaries are embedded so the UI can switch offline. Other Malaysian languages may be added later.
 
 ## Country and region
 
-Select any of 249 ISO 3166-1 countries and territories, default Malaysia (MY). Country names are localized by the platform where available. Preference is stored locally, separately from language and school memberships. Country selection does not verify residency, grant access, configure radio frequencies or implement country-specific legal rules. Native selectors support search; browser uses its standard select control.
+Select any of 249 ISO 3166-1 countries and territories, default Malaysia (MY). Country names are localized by the platform where available. Preference is stored locally per account, separately from language and school memberships. Country selection does not verify residency, grant access, configure radio frequencies or implement country-specific legal rules. Native selectors support search; browser uses its standard select control.
+
+Country and language controls are exclusively inside Profile. Signed-out screens use Bahasa Melayu; new profiles default to Malaysia and Bahasa Melayu. Existing device-global preferences are not assigned to an account because ownership is unknown. Profile preferences use account-keyed browser localStorage / native preferences and are not synchronized between devices.

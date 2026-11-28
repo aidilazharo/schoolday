@@ -6,5 +6,5 @@ export function countryOptions(lang:Language){
  const collator=new Intl.Collator(lang);
  return countries.map(code=>({code,name:names.of(code)??code})).sort((a,b)=>collator.compare(a.name,b.name)||a.code.localeCompare(b.code));
 }
-export function savedCountry(){try{return normalizeCountry(localStorage.getItem('schoolday.country'))}catch{return 'MY'}}
-export function saveCountry(code:string){try{localStorage.setItem('schoolday.country',normalizeCountry(code))}catch{/* session preference still works */}}
+export function savedCountry(userId:string){try{return normalizeCountry(localStorage.getItem('schoolday.country.'+userId))}catch{return 'MY'}}
+export function saveCountry(code:string,userId:string){try{localStorage.setItem('schoolday.country.'+userId,normalizeCountry(code))}catch{/* session preference still works */}}

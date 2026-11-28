@@ -75,3 +75,5 @@ form button{background:#171717;color:white;border-radius:10px;padding:10px 16px}
 .language-select{display:flex;align-items:center;gap:8px;font-size:13px;min-width:0;flex-wrap:wrap}.language-select select{font:inherit;color:#171717;background:#fff;border:1px solid #ccc;border-radius:8px;min-height:44px;padding:8px;max-width:100%}.login-card .language-select{align-self:stretch;justify-content:space-between}.profile .language-select{margin-top:12px}.footer-nav button span{overflow-wrap:anywhere;line-height:1.2}.actions{flex-wrap:wrap;justify-content:flex-end}.chat-label strong{overflow-wrap:anywhere}.login-card button{white-space:normal;overflow-wrap:anywhere}
 
 .country-select select{max-width:100%;min-width:0;width:auto}.login-card .country-select select{flex:1}.profile .country-select{margin-top:8px}.profile{max-height:40dvh;overflow:auto}
+
+.profile-settings{display:flex;flex-direction:column;gap:12px}.profile-settings p{margin:0}.profile-settings .language-select{flex-direction:column;align-items:stretch;gap:6px}.profile-settings .language-select select{width:100%;max-width:100%}

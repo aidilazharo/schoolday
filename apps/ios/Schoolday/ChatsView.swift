@@ -1,8 +1,7 @@
 import SwiftUI
 
 struct ChatsView: View {
-    @AppStorage("schoolday.language") private var lang="ms"
-    @AppStorage("schoolday.country") private var country="MY"
+    private let lang="ms"
     private func t(_ key:String)->String {SchooldayLanguage.text(key,lang)}
     @State private var db:LocalDatabase?
     @State private var accounts:[Account]=[]
@@ -13,7 +12,7 @@ struct ChatsView: View {
     @State private var error=""
     var body:some View {
         Group {
-            if let db=db,let user=user { Workspace(db:db,user:user,lang:$lang,country:$country){ self.user=nil;normal=false;email="";password="";error="" }.id(user.id) }
+            if let db=db,let user=user { Workspace(db:db,user:user){ self.user=nil;normal=false;email="";password="";error="" }.id(user.id) }
             else { loginView }
         }.tint(.primary).task {
             guard db==nil else{return}
@@ -24,7 +23,6 @@ struct ChatsView: View {
     private var loginView:some View {
         ScrollView {
             VStack(alignment:.leading,spacing:16) {
-                HStack {CountryMenu(country:$country,language:lang);Spacer();LanguageMenu(language:$lang)}.font(.subheadline)
                 Text("schoolday").font(.system(size:44,weight:.bold,design:.serif)).italic()
                 Text(t("Sign in")).font(.title2.bold())
                 sampleMenu
@@ -60,8 +58,14 @@ struct ChatsView: View {
 private struct Workspace:View {
     let db:LocalDatabase
     let user:Account
-    @Binding var lang:String
-    @Binding var country:String
+    @AppStorage private var lang:String
+    @AppStorage private var country:String
+    @State private var showProfile=false
+    init(db:LocalDatabase,user:Account,logout:@escaping ()->Void){
+        self.db=db;self.user=user;self.logout=logout
+        _lang=AppStorage(wrappedValue:"ms","schoolday.language."+user.id)
+        _country=AppStorage(wrappedValue:"MY","schoolday.country."+user.id)
+    }
     private func t(_ key:String)->String {SchooldayLanguage.text(key,lang)}
     let logout:()->Void
     @State private var spaces:[ChatSpace]=[]
@@ -83,12 +87,13 @@ private struct Workspace:View {
             do {spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
         }.confirmationDialog(t("Clear local drafts?"),isPresented:$confirm){Button(t("Clear"),role:.destructive){change(nil)}}
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
+        .sheet(isPresented:$showProfile){profileView}
     }
     private var sidebar:some View {
         VStack(alignment:.leading,spacing:0){
             HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button(t("Logout"),action:logout)}.padding()
             Divider()
-            VStack(alignment:.leading){Text(user.name).font(.headline);Text(SchooldayLanguage.roles(user.roles,lang)).font(.caption).foregroundStyle(.secondary);LanguageMenu(language:$lang);CountryMenu(country:$country,language:lang)}.padding()
+            Button {showProfile=true} label:{HStack{VStack(alignment:.leading){Text(user.name).font(.headline);Text(SchooldayLanguage.roles(user.roles,lang)).font(.caption).foregroundStyle(.secondary)};Spacer();Label(t("Profile"),systemImage:"person.crop.circle")}}.buttonStyle(.plain).padding()
             Divider()
             Text(t("Chats")).font(.title2.bold()).padding()
             ScrollView{
@@ -99,6 +104,22 @@ private struct Workspace:View {
                     Divider()
                 }
             }
+        }
+    }
+    private var profileView:some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(user.name).font(.headline)
+                    Text(user.email)
+                    Text(SchooldayLanguage.roles(user.roles,lang)).foregroundStyle(.secondary)
+                }
+                Section {
+                    HStack {Text(t("Language"));Spacer();LanguageMenu(language:$lang)}
+                    HStack {Text(t("Country / region"));Spacer();CountryMenu(country:$country,language:lang)}
+                }
+            }.navigationTitle(t("Profile"))
+             .toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showProfile=false}}}
         }
     }
     private func chat(wide:Bool)->some View{
