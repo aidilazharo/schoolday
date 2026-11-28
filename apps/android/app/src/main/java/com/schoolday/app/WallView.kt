@@ -33,7 +33,7 @@ private data class TimelineEntry(val id:String,val time:Long,val post:WallPost?=
  val listState=rememberLazyListState()
  LaunchedEffect(entries.size){if(entries.isNotEmpty())listState.scrollToItem(entries.lastIndex)}
  Column(modifier.fillMaxWidth()){
- LazyColumn(Modifier.weight(1f).fillMaxWidth(),state=listState,contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
+ LazyColumn(Modifier.weight(1f).fillMaxWidth(),state=listState,contentPadding=PaddingValues(12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
   items(entries,key={it.id}){entry->
    val message=entry.message
    val post=entry.post

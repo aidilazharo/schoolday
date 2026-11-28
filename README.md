@@ -74,3 +74,5 @@ Eight local accounts including children ages 8, 11 and 15 linked to the two samp
 ## Unified message interaction and adaptive profile
 
 One composer sends shared text to the existing social content table. Short messages render as bubbles, longer messages and expanded discussion threads widen automatically. Every shared message supports likes and expandable comments. Migration v6 copies previous shared messages into the social table with stable chat-prefixed IDs and excludes duplicates from the legacy query. Private unsent drafts remain private and non-interactive. Existing posts, reactions, comments, membership and points are retained. Profile occupies the left pane on wide screens while the active conversation remains visible; compact screens show one pane. Media and private replies remain future work.
+
+Conversation rows span the entire chat pane on all screen widths, with a small 12-unit inset on each side. Incoming messages align left and outgoing messages right; the readable bubble-width limit remains independent of row width.

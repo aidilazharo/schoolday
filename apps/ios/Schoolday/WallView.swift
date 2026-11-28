@@ -27,7 +27,7 @@ struct WallView:View {
                             if let message=entry.message{bubble(message)}
                         }
                         Color.clear.frame(height:1).id("end")
-                    }.padding().frame(maxWidth:680).frame(maxWidth:.infinity)
+                    }.frame(maxWidth:.infinity,alignment:.leading).padding(12)
                 }.onChange(of:entries.count){_,_ in proxy.scrollTo("end",anchor:.bottom)}
             }
             Divider()
