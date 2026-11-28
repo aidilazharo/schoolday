@@ -1,0 +1,39 @@
+{
+  "now": 1000,
+  "valid": [
+    {
+      "version": 0,
+      "id": "m1",
+      "senderId": "a",
+      "recipientId": "b",
+      "ciphertext": "fixture-only",
+      "expiresAt": 2000
+    }
+  ],
+  "invalid": [
+    {
+      "version": 1,
+      "id": "m1",
+      "senderId": "a",
+      "recipientId": "b",
+      "ciphertext": "fixture-only",
+      "expiresAt": 2000
+    },
+    {
+      "version": 0,
+      "id": "m1",
+      "senderId": "a",
+      "recipientId": "b",
+      "ciphertext": "fixture-only",
+      "expiresAt": 1000
+    },
+    {
+      "version": 0,
+      "id": "m1",
+      "senderId": "",
+      "recipientId": "b",
+      "ciphertext": "fixture-only",
+      "expiresAt": 2000
+    }
+  ]
+}
