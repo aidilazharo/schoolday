@@ -132,17 +132,7 @@ class MainActivity:ComponentActivity(){
                         else item{TextButton(onClick={opened=true}){Text(module.title+" ›")}}
                     }
                     HorizontalDivider()
-                    key(category){LazyRow(Modifier.fillMaxWidth(),contentPadding=PaddingValues(horizontal=4.dp,vertical=3.dp),horizontalArrangement=Arrangement.spacedBy(4.dp)){
-                        items(SchoolModules.visible(category,user.roles),key={it.id}){m->
-                            TextButton(onClick={moduleId=m.id;record="";opened=wide},enabled=!busy,modifier=Modifier.width(76.dp).heightIn(min=64.dp).background(if(moduleId==m.id)Color(0xFFEDEDED) else Color.Transparent,RoundedCornerShape(5.dp)).semantics{this.selected=moduleId==m.id;contentDescription=m.title+if(m.status=="local")"" else if(m.status=="partial")" · Partially implemented" else " · Not implemented"},contentPadding=PaddingValues(2.dp)){
-                                Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(3.dp)){
-                                    if(m.status!="local")HorizontalDivider(thickness=3.dp,color=Color(0xFFC62828))else Spacer(Modifier.height(3.dp))
-                                    ModuleIcon(m.id,if(moduleId==m.id)Color(0xFF171717) else Color(0xFF666666))
-                                    Text(ModuleNavigation.label(m.id,lang),style=MaterialTheme.typography.labelSmall,maxLines=3,fontWeight=if(moduleId==m.id)FontWeight.Bold else FontWeight.Normal,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
-                                }
-                            }
-                        }
-                    }}
+                    key(category){ModuleToolbar(SchoolModules.visible(category,user.roles).filter{!wide||it.id !in ModuleNavigation.workspaceTools},moduleId,lang,busy){m->moduleId=m.id;record="";opened=wide}}
                     HorizontalDivider()
                     Row(Modifier.fillMaxWidth()){
                         tabs.forEachIndexed{j,name->TextButton(onClick={category=name;moduleId=SchoolModules.visible(name,user.roles).first().id;record="";opened=wide},enabled=!busy,modifier=Modifier.weight(1f),contentPadding=PaddingValues(2.dp)){Column(horizontalAlignment=Alignment.CenterHorizontally){Text(listOf("◉","▤","▦","☆","○")[j],style=MaterialTheme.typography.titleLarge);Text(ModuleNavigation.label(name,lang),style=MaterialTheme.typography.labelSmall,fontWeight=if(category==name)FontWeight.Bold else FontWeight.Normal,maxLines=2)}}}
@@ -152,6 +142,8 @@ class MainActivity:ComponentActivity(){
             if(wide)VerticalDivider()
             if(wide||opened){
                 Column(Modifier.weight(1f).fillMaxHeight()){
+                    val tools=SchoolModules.visible(category,user.roles).filter{it.id in ModuleNavigation.workspaceTools}
+                    if(wide&&tools.isNotEmpty()){key(category){ModuleToolbar(tools,moduleId,lang,busy){m->moduleId=m.id;record="";opened=true}};HorizontalDivider()}
                     Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically){
                         Column(Modifier.weight(1f)){Text(t(if(tab=="Chats")spaces.firstOrNull{it.id==selected}?.title?:"Chats" else module.title),fontWeight=FontWeight.Bold);if(tab=="Chats")Text(t("Local only"),style=MaterialTheme.typography.bodySmall)}
                         if(!wide)TextButton(onClick={opened=false},enabled=!busy){Text(t("Back"))}
@@ -190,4 +182,19 @@ class MainActivity:ComponentActivity(){
         }
     }
     if(error)AlertDialog(onDismissRequest={error=false},title={Text(t("Local database unavailable"))},confirmButton={TextButton(onClick={error=false}){Text(t("OK"))}})
+}
+
+@Composable private fun ModuleToolbar(modules:List<SchoolModule>,moduleId:String,lang:String,busy:Boolean,onSelect:(SchoolModule)->Unit){
+    LazyRow(Modifier.fillMaxWidth(),contentPadding=PaddingValues(horizontal=4.dp,vertical=3.dp),horizontalArrangement=Arrangement.spacedBy(4.dp)){
+        items(modules,key={it.id}){m->
+            val active=moduleId==m.id
+            TextButton(onClick={onSelect(m)},enabled=!busy,modifier=Modifier.width(76.dp).heightIn(min=64.dp).background(if(active)Color(0xFFEDEDED) else Color.Transparent,RoundedCornerShape(5.dp)).semantics{selected=active;contentDescription=m.title+if(m.status=="local")"" else if(m.status=="partial")" · Partially implemented" else " · Not implemented"},contentPadding=PaddingValues(2.dp)){
+                Column(horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(3.dp)){
+                    if(m.status!="local")HorizontalDivider(thickness=3.dp,color=Color(0xFFC62828))else Spacer(Modifier.height(3.dp))
+                    ModuleIcon(m.id,if(active)Color(0xFF171717) else Color(0xFF666666))
+                    Text(ModuleNavigation.label(m.id,lang),style=MaterialTheme.typography.labelSmall,maxLines=3,fontWeight=if(active)FontWeight.Bold else FontWeight.Normal,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+                }
+            }
+        }
+    }
 }

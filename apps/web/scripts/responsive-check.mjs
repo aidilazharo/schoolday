@@ -14,8 +14,10 @@ try{
   const page=await browser.newPage({viewport:{width,height}});await page.goto(url);
   await page.waitForFunction(()=>{const e=document.querySelector('#sample');return e&&!e.disabled&&e.options.length>1});await page.locator('#sample').selectOption('student');
   await page.locator('.module-nav .chat-item').first().waitFor({state:'visible'});
-  assert.equal(await page.locator('.module-icon-nav button').count(),6);
   const wide=width>=768&&height>=480;
+  assert.equal(await page.locator('.module-icon-nav button:visible').count(),wide?4:6);
+  assert.equal(await page.locator('.workspace-tools [data-module=Classroom]').isVisible(),wide);
+  if(wide){await page.locator('.workspace-tools [data-module=Classroom]').click();assert.equal(await page.locator('.workspace-tools [aria-current=page]').getAttribute('data-module'),'Classroom');await page.locator('.module-icon-nav [data-module=Chats]').click();}
   assert.equal(await page.locator('.chat-panel').isVisible(),wide,name+' initial pane');
   await page.locator('.module-nav .chat-item').first().click();
   assert.equal(await page.locator('.sidebar').isVisible(),wide,name+' sidebar after chat selection');

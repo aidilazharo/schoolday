@@ -45,6 +45,25 @@ enum ModuleNavigation {
 "Achievements":["en":"Achievements","ms":"Pencapaian","zh":"成就","ta":"சாதனைகள்"],
 "Me":["en":"Me","ms":"Saya","zh":"我的","ta":"நான்"]]
  static let symbols:[String:String]=["Chats":"bubble.left","Calls":"video","Classroom":"person.2.wave.2","Files":"folder","Alerts":"bell","Offline":"antenna.radiowaves.left.and.right","Quiz":"list.bullet.clipboard","Gate":"lock.open","Courses":"book","Materials":"books.vertical","Assignments":"checklist","QuizDraft":"square.and.pencil","Assessment":"doc.text.magnifyingglass","Grades":"chart.bar","Research":"magnifyingglass","Internship":"briefcase","Calendar":"calendar","EventDraft":"calendar.badge.plus","Attendance":"checkmark.circle","Timetable":"clock","Institutions":"building.2","Activities":"trophy","Library":"book.closed","Services":"square.grid.2x2","Welfare":"heart","Administration":"gearshape","University":"graduationcap","Rewards":"star","Certificates":"rosette","CertificateDraft":"pencil.and.outline","Portfolio":"folder.badge.person.crop","Credentials":"seal","Career":"briefcase","Profile":"person.crop.circle","FamilyControls":"person.2","Friends":"person.2.circle","Security":"shield","Safety":"exclamationmark.shield","Support":"questionmark.circle"]
+ static let workspaceTools:Set<String>=["Classroom","Offline","QuizDraft","Assessment","Grades","Research","Internship","EventDraft","Institutions","Administration","University","CertificateDraft","Credentials","FamilyControls","Security"]
  static func label(_ id:String,_ lang:String)->String{labels[id]?[lang] ?? labels[id]?["en"] ?? id}
  static func icon(_ id:String)->String{symbols[id] ?? "square.grid.2x2"}
+}
+
+struct ModuleToolButton:View{
+ let module:SchoolModule
+ let lang:String
+ let selected:Bool
+ let action:()->Void
+ private var statusLabel:String{module.status=="local" ? "" : module.status=="partial" ? " · Partially implemented":" · Not implemented"}
+ var body:some View{
+  Button(action:action){
+   VStack(spacing:4){
+    Image(systemName:ModuleNavigation.icon(module.id)).font(.system(size:20))
+    Text(ModuleNavigation.label(module.id,lang)).font(.caption2).multilineTextAlignment(.center).lineLimit(3)
+   }.frame(width:76).frame(minHeight:62)
+    .background(selected ? Color.primary.opacity(0.08):Color.clear,in:RoundedRectangle(cornerRadius:5))
+    .overlay(alignment:.top){if module.status != "local"{Rectangle().fill(Color.red).frame(height:3)}}
+  }.buttonStyle(.plain).accessibilityLabel(module.title+statusLabel).accessibilityAddTraits(selected ? .isSelected:[])
+ }
 }

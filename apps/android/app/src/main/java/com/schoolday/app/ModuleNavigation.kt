@@ -96,6 +96,7 @@ object ModuleNavigation{
 "Security" to "M12 3L20 6V12Q20 18 12 22Q4 18 4 12V6Z",
 "Safety" to "M12 3L20 6V12Q20 18 12 22Q4 18 4 12V6ZM12 8V13M12 16V17",
 "Support" to "M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3ZM9 9A3 3 0 0 1 15 9Q15 11 12 12V14M12 17V18")
+ val workspaceTools=setOf("Classroom","Offline","QuizDraft","Assessment","Grades","Research","Internship","EventDraft","Institutions","Administration","University","CertificateDraft","Credentials","FamilyControls","Security")
  fun label(id:String,lang:String)=labels[id]?.get(lang)?:labels[id]?.get("en")?:id
 }
 @Composable fun ModuleIcon(id:String,color:Color,modifier:Modifier=Modifier){
