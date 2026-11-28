@@ -162,6 +162,17 @@ CREATE TABLE IF NOT EXISTS gate_policies(id TEXT PRIMARY KEY,parent_id TEXT NOT 
 CREATE TRIGGER IF NOT EXISTS gate_policy_parent BEFORE INSERT ON gate_policies BEGIN SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM roles WHERE user_id=NEW.parent_id AND role='Parent') OR NOT EXISTS(SELECT 1 FROM family_links WHERE parent_id=NEW.parent_id AND child_id=NEW.child_id) OR NOT EXISTS(SELECT 1 FROM demographics WHERE user_id=NEW.child_id AND age<18) THEN RAISE(ABORT,'Linked parent of a minor required') END; END;
 CREATE TABLE IF NOT EXISTS gate_grants(id TEXT PRIMARY KEY,child_id TEXT NOT NULL REFERENCES users(id),policy_id TEXT NOT NULL REFERENCES gate_policies(id),question_id TEXT NOT NULL REFERENCES quiz_questions(id),answer INTEGER NOT NULL CHECK(answer BETWEEN -1 AND 3),created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s','now') AS INTEGER)*1000));
 CREATE TRIGGER IF NOT EXISTS gate_grant_validate BEFORE INSERT ON gate_grants BEGIN SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM gate_policies p WHERE p.id=NEW.policy_id AND p.child_id=NEW.child_id AND p.mask>0 AND p.rowid=(SELECT MAX(rowid) FROM gate_policies WHERE child_id=NEW.child_id)) OR NOT EXISTS(SELECT 1 FROM quiz_questions q JOIN demographics d ON d.user_id=NEW.child_id AND d.age BETWEEN q.min_age AND q.max_age AND d.age<18 WHERE q.id=NEW.question_id AND (q.correct=NEW.answer OR (NEW.answer=-1 AND EXISTS(SELECT 1 FROM quiz_permissions WHERE child_id=NEW.child_id AND enabled=1) AND EXISTS(SELECT 1 FROM points_accounts WHERE user_id=NEW.child_id AND balance>=5)))) THEN RAISE(ABORT,'Quiz answer or parent permission required') END; END;
+INSERT OR IGNORE INTO users VALUES('university','Nur Alya Sofea','alya@example.invalid',1,NULL,NULL);
+INSERT OR IGNORE INTO roles VALUES('university','Student');
+INSERT OR IGNORE INTO channels VALUES('university','University Wall',6);
+INSERT OR IGNORE INTO channels VALUES('uni-course','Research Methodology',7);
+INSERT OR IGNORE INTO memberships VALUES('university','open'),('university','university'),('university','uni-course');
+INSERT OR IGNORE INTO demographics VALUES('university',21);
+INSERT OR IGNORE INTO points_accounts VALUES('university',100);
+INSERT OR IGNORE INTO identity_tokens VALUES('university',lower(hex(randomblob(16))));
+INSERT OR IGNORE INTO space_messages VALUES('uni-welcome','university','university','Hello everyone! Looking forward to the new semester.',1795827720000);
+INSERT OR IGNORE INTO wall_posts VALUES('chat:uni-welcome','university','university','Hello everyone! Looking forward to the new semester.',1795827720000);
+INSERT OR IGNORE INTO wall_posts VALUES('uni-course-post','uni-course','university','Let us discuss our research proposal and assignment.',1795827780000);
 """
         guard sqlite3_exec(db, schema, nil, nil, nil) == SQLITE_OK else { sqlite3_close(db); db=nil; throw Failure.database }
     }

@@ -37,7 +37,7 @@ struct ChatsView: View {
     private var sampleMenu:some View {
         Menu(t("Select sample user")) {
             ForEach(accounts) { account in
-                Button(account.name+" — "+SchooldayLanguage.roles(account.roles,lang)) {error="";remember(account)}
+                Button(account.name+" — "+(account.id=="university" ? (lang=="ms" ? "Pelajar universiti":"University student"):SchooldayLanguage.roles(account.roles,lang))) {error="";remember(account)}
             }
         }.frame(maxWidth:.infinity,alignment:.leading).padding().background(.thinMaterial,in:RoundedRectangle(cornerRadius:10))
     }
@@ -64,10 +64,12 @@ private struct Workspace:View {
     @AppStorage private var country:String
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var category="Connect"
+    @State private var choosing=false
     @State private var moduleId="Chats"
     @State private var record=""
     @State private var revision=0
-    private var module:SchoolModule{SchoolModules.visible(category,user.roles).first(where:{$0.id==moduleId}) ?? SchoolModules.visible(category,user.roles)[0]}
+    private var minor:Bool{(Int((try? db.query("SELECT age FROM demographics WHERE user_id=?",[user.id]))?.first?.first ?? "18") ?? 18)<18}
+    private var module:SchoolModule{SchoolModules.visible(category,user.roles,minor:minor).first(where:{$0.id==moduleId}) ?? SchoolModules.visible(category,user.roles,minor:minor)[0]}
     private var tab:String{module.id}
     private var kind:String?{tab=="QuizDraft" ? "Quiz":tab=="CertificateDraft" ? "Certificates":tab=="EventDraft" ? "Calendar":nil}
     private var drafts:[[String]]{_ = revision; guard staff,let kind=kind else{return []};return (try? db.query("SELECT id,title,details FROM workspace_drafts WHERE owner_id=? AND kind=? ORDER BY created_at DESC,id",[user.id,kind])) ?? []}
@@ -93,29 +95,28 @@ private struct Workspace:View {
                 if wide || !opened {sidebar(wide:wide).frame(width:wide ? min(max(geo.size.width*0.30,250),390):geo.size.width)}
                 if wide{Divider()}
                 if wide || opened{workspace(wide:wide)}
-            }.onChange(of:wide,initial:true){_,isWide in if isWide{opened=true}}
+            }.onChange(of:wide,initial:true){_,isWide in if isWide{opened=true;choosing=false}}
         }.task{
             do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if selected.isEmpty,let first=spaces.first{selected=first.id}}catch{self.error=true}
         }
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
     }
     private func selectModule(_ m:SchoolModule,wide:Bool){
-        moduleId=m.id;record="";opened=wide
+        moduleId=m.id;record="";choosing=false;opened=wide
     }
     private func selectCategory(_ name:String,wide:Bool){
-        category=name;moduleId=SchoolModules.visible(name,user.roles)[0].id;record="";opened=wide
+        category=name;moduleId=SchoolModules.visible(name,user.roles,minor:minor)[0].id;record="";choosing = !wide;opened=wide
     }
     private func sidebar(wide:Bool)->some View {
         VStack(alignment:.leading,spacing:0){
             HStack{
                 Text("schoolday").font(.system(size:26,weight:.bold,design:.serif)).italic()
                 Spacer()
+                if !wide{Button(ModuleNavigation.label(category,lang)+" ▾"){choosing.toggle()}.font(.caption)}
                 Button(t("Logout"),action:logout)
-            }.padding()
+            }.padding(.horizontal,12).frame(height:66)
             Divider()
-            ScrollView{recordList.padding(8)}
-            Divider()
-            moduleToolbar(SchoolModules.visible(category,user.roles).filter{!wide || !ModuleNavigation.workspaceTools.contains($0.id)},wide:wide)
+            ScrollView{if !wide && choosing{moduleChooser}else{recordList.padding(8)}}
             Divider()
             categoryToolbar(wide:wide)
         }
@@ -127,7 +128,7 @@ private struct Workspace:View {
                     Text(module.title).font(.headline)
                     if module.status != "local"{Text(module.status=="partial" ? "Partially implemented":"Not implemented").font(.caption).foregroundStyle(.red)}
                 }.frame(maxWidth:.infinity,alignment:.leading).padding(8)
-                    .overlay(alignment:.top){if module.status != "local"{Rectangle().fill(Color.red).frame(height:3)}}
+
             }
             if tab=="Chats"{
                 ForEach(spaces){space in
@@ -156,6 +157,13 @@ private struct Workspace:View {
             }else{Button(module.title){opened=true}.padding(8)}
         }
     }
+    private var moduleChooser:some View{
+        LazyVGrid(columns:[GridItem(.adaptive(minimum:84),spacing:8)],spacing:8){
+            ForEach(SchoolModules.visible(category,user.roles,minor:minor)){m in
+                ModuleToolButton(module:m,lang:lang,selected:moduleId==m.id){selectModule(m,wide:false)}
+            }
+        }.padding(8)
+    }
     private func moduleToolbar(_ modules:[SchoolModule],wide:Bool)->some View{
         ScrollView(.horizontal,showsIndicators:true){
             HStack(alignment:.top,spacing:4){
@@ -178,17 +186,24 @@ private struct Workspace:View {
         }.padding(.horizontal,4)
     }
     private func workspace(wide:Bool)->some View{
-        let tools=SchoolModules.visible(category,user.roles).filter{ModuleNavigation.workspaceTools.contains($0.id)}
-        return VStack(spacing:0){
-            if wide && !tools.isEmpty{moduleToolbar(tools,wide:true);Divider()}
+        VStack(spacing:0){
+            if wide{
+                HStack(spacing:12){
+                    VStack(alignment:.leading,spacing:2){
+                        Text(tab=="Chats" ? t(spaces.first(where:{$0.id==selected})?.title ?? "Chats"):t(module.title)).font(.subheadline.bold()).lineLimit(2)
+                        if tab=="Chats"{Text(t("Local only")).font(.caption2).foregroundStyle(.secondary)}
+                    }.frame(minWidth:80,maxWidth:150,alignment:.leading)
+                    moduleToolbar(SchoolModules.visible(category,user.roles,minor:minor),wide:true)
+                }.padding(.horizontal,12).frame(height:66)
+                Divider()
+            }
             if tab=="Chats"{chat(wide:wide)}else{detail(wide:wide)}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
     private func detail(wide:Bool)->some View{
         VStack(spacing:0){
-            HStack{Text(module.title).font(.headline);Spacer();if !wide{Button(t("Back")){opened=false}}}.padding()
-            Divider()
-            if module.status != "local"{Rectangle().fill(Color.red).frame(height:3);Text(module.status=="partial" ? "Partially implemented":"Not implemented").font(.caption).foregroundStyle(.red).padding(6)}
+            if !wide{HStack{Text(module.title).font(.headline);Spacer();Button(t("Back")){opened=false}}.padding();Divider()}
+            if module.status != "local"{Text(module.status=="partial" ? "Partially implemented":"Not implemented").font(.caption).foregroundStyle(.red).padding(6)}
             if let kind=kind,staff{if let r=drafts.first(where:{$0[0]==record}){Form{Section(r[1]){Text(r[2]);Text(t("Draft only · Not published")).font(.caption);Button(t("Create draft")){record=""}}}}else{WorkspaceEditor(db:db,user:user,kind:kind,lang:lang,onSaved:{revision+=1}).id(tab)}}
             else if tab=="Profile"{profileView}
             else if tab=="Rewards" || tab=="Quiz"{Form{FamilyFeatures(db:db,user:user,screen:tab,onChange:refreshPoints)}.id(tab)}
@@ -225,8 +240,7 @@ private struct Workspace:View {
     private func refreshPoints(){points=(try? db.points(user)) ?? points}
     private func chat(wide:Bool)->some View {
         VStack(spacing:0){
-            HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();if !wide{Button(t("Back")){opened=false}}}.padding()
-            Divider()
+            if !wide{HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();Button(t("Back")){opened=false}}.padding();Divider()}
             if !selected.isEmpty {WallView(db:db,user:user,channel:selected,lang:lang).id(selected)}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }

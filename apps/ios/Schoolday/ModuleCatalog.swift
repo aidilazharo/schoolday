@@ -45,7 +45,7 @@ SchoolModule(cat:"Me",id:"Security",title:"Security & devices",status:"preview",
 SchoolModule(cat:"Me",id:"Safety",title:"Safety & moderation",status:"preview",role:"all",records:["Blocked accounts","Report queue"],fields:["Report category","Description"]),
 SchoolModule(cat:"Me",id:"Support",title:"Help & accessibility",status:"preview",role:"all",records:["Accessibility settings","Contact support"],fields:["Topic","Message"])
  ]
- static func visible(_ cat:String,_ roles:String)->[SchoolModule]{let r=roles.components(separatedBy:" + ");return all.filter{$0.cat==cat && ($0.role=="all" || $0.role=="staff" && (r.contains("Teacher") || r.contains("School Admin")) || $0.role=="parent" && r.contains("Parent") || $0.role=="student" && r.contains("Student"))}}
+ static func visible(_ cat:String,_ roles:String,minor:Bool=true)->[SchoolModule]{let r=roles.components(separatedBy:" + ");return all.filter{$0.cat==cat && ($0.id != "Gate" || minor) && ($0.role=="all" || $0.role=="staff" && (r.contains("Teacher") || r.contains("School Admin")) || $0.role=="parent" && r.contains("Parent") || $0.role=="student" && r.contains("Student"))}}
 }
 struct ModulePreview:View{
  let module:SchoolModule;let db:LocalDatabase;let user:Account;let record:String

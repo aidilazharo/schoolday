@@ -100,3 +100,11 @@ Five primary categories remain at the bottom. Community replaces the Campus disp
 ## Workspace tool placement
 
 Wide layouts put advanced tools in a category-specific toolbar at the top of the right detail pane: live classes and offline transport, quiz editing, assessment, progress, research, training, event planning, institutions, administration, academic administration, certificate design, credentials, family controls and security. Everyday modules remain above the main navigation in the left panel. Compact layouts retain all permitted modules in the scrollable left/menu toolbar so they remain reachable without requiring a desktop. The selected module always determines the left record list and right details; red indicators and role filtering are unchanged. SwiftUI navigation was decomposed into smaller views to address the previous compiler type-check timeout. Responsive checks cover toolbar placement and switching.
+
+## Single navigation footer and aligned split header
+
+Wide layouts display the five primary categories as the only left footer and all permitted modules in a single horizontal toolbar integrated with the right detail header. Left and right headers share a 66-unit height; a continuous neutral divider separates the panels. Red lines appear on unfinished module icons rather than across the pane boundaries. Compact layouts use a module chooser in the record area when a category is selected; the footer remains one row. The category button in the compact header reopens the chooser. Saved records and permission filters are unchanged. Browser checks verify header alignment, category switching, module access and responsive layout.
+
+## University sample account
+
+Nur Alya Sofea, age 21, is a fictional university student sample with Student role, University Wall, Research Methodology and Open Wall memberships. SQLite migration v9 adds the sample without changing existing accounts or balances, seeds example discussions and a local QR identity. Adult students cannot see Quiz Unlock; the underlying policy/grant database guards also require minors. University academic workflows remain development previews; no real university enrolment is implied.

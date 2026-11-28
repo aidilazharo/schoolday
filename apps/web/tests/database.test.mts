@@ -7,7 +7,7 @@ const schema=readFileSync(new URL('../../../shared/database/schema.sql',import.m
 test('role membership and independent outbox',()=>{
  const db=new DatabaseSync(':memory:');try{
  db.exec(schema);
- assert.equal(db.prepare('SELECT count(*) AS n FROM users WHERE sample=1').get()!.n,7);
+ assert.equal(db.prepare('SELECT count(*) AS n FROM users WHERE sample=1').get()!.n,8);
  assert.equal(db.prepare('SELECT count(*) AS n FROM roles WHERE user_id=?').get('dual')!.n,2);
  assert.equal(db.prepare('SELECT count(*) AS n FROM memberships WHERE user_id=?').get('normal')!.n,1);
  assert.throws(()=>db.prepare('INSERT INTO drafts VALUES(?,?,?,?,?)').run('bad','normal','staff','invalid',1));

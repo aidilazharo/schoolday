@@ -50,7 +50,7 @@ SchoolModule("Me","Security","Security & devices","preview","all",listOf("This d
 SchoolModule("Me","Safety","Safety & moderation","preview","all",listOf("Blocked accounts","Report queue"),listOf("Report category","Description")),
 SchoolModule("Me","Support","Help & accessibility","preview","all",listOf("Accessibility settings","Contact support"),listOf("Topic","Message"))
  )
- fun visible(cat:String,roles:String):List<SchoolModule>{val r=roles.split(" + ");return all.filter{it.cat==cat&&(it.role=="all"||it.role=="staff"&&("Teacher" in r||"School Admin" in r)||it.role=="parent"&&"Parent" in r||it.role=="student"&&"Student" in r)}}
+ fun visible(cat:String,roles:String,minor:Boolean=true):List<SchoolModule>{val r=roles.split(" + ");return all.filter{it.cat==cat&&(it.id!="Gate"||minor)&&(it.role=="all"||it.role=="staff"&&("Teacher" in r||"School Admin" in r)||it.role=="parent"&&"Parent" in r||it.role=="student"&&"Student" in r)}}
 }
 @Composable fun ModulePreview(module:SchoolModule,db:LocalDatabase,user:Account,record:String,modifier:Modifier=Modifier){
  val values=remember(module.id,record){mutableStateMapOf<String,String>()}
