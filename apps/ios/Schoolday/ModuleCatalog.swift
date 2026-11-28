@@ -12,7 +12,7 @@ SchoolModule(cat:"Connect",id:"Files",title:"Files & media",status:"preview",rol
 SchoolModule(cat:"Connect",id:"Alerts",title:"Emergency alerts",status:"preview",role:"all",records:["School closure drill","Weather advisory"],fields:["Notice","Audience","Message"]),
 SchoolModule(cat:"Connect",id:"Offline",title:"Offline & LoRa",status:"preview",role:"all",records:["Bluetooth","Wi-Fi","LoRa bridge"],fields:["Device","Transport"]),
 SchoolModule(cat:"Learn",id:"Quiz",title:"Quiz",status:"local",role:"all",records:[],fields:[]),
-SchoolModule(cat:"Learn",id:"Gate",title:"Quiz Unlock",status:"preview",role:"student",records:[],fields:[]),
+SchoolModule(cat:"Learn",id:"Gate",title:"Quiz Unlock",status:"partial",role:"student",records:[],fields:[]),
 SchoolModule(cat:"Learn",id:"Courses",title:"Subjects & courses",status:"preview",role:"all",records:["Mathematics Year 5","Research methodology"],fields:["Course code","Title","Education level"]),
 SchoolModule(cat:"Learn",id:"Materials",title:"Learning materials",status:"preview",role:"all",records:["Workbook","Research guide"],fields:["Resource","Subject","File"]),
 SchoolModule(cat:"Learn",id:"Assignments",title:"Assignments",status:"preview",role:"all",records:["Science project","Essay draft"],fields:["Assignment","Due date","Submission"]),
@@ -39,7 +39,7 @@ SchoolModule(cat:"Achievements",id:"Portfolio",title:"Portfolio & PAJSK",status:
 SchoolModule(cat:"Achievements",id:"Credentials",title:"Micro-credentials & transcripts",status:"preview",role:"all",records:["Digital literacy","Academic transcript"],fields:["Credential","Issuer","Reference"]),
 SchoolModule(cat:"Achievements",id:"Career",title:"Career & alumni",status:"preview",role:"all",records:["Industry mentoring","Graduate placement"],fields:["Interest","Programme","Details"]),
 SchoolModule(cat:"Me",id:"Profile",title:"Profile & family",status:"local",role:"all",records:[],fields:[]),
-SchoolModule(cat:"Me",id:"FamilyControls",title:"Family Controls",status:"preview",role:"parent",records:[],fields:[]),
+SchoolModule(cat:"Me",id:"FamilyControls",title:"Family Controls",status:"partial",role:"parent",records:[],fields:[]),
 SchoolModule(cat:"Me",id:"Friends",title:"Friends & relationships",status:"partial",role:"all",records:["Friend requests","Parent links"],fields:["Identity code","Relationship"]),
 SchoolModule(cat:"Me",id:"Security",title:"Security & devices",status:"preview",role:"all",records:["This device","Other device"],fields:["Device","Verification method"]),
 SchoolModule(cat:"Me",id:"Safety",title:"Safety & moderation",status:"preview",role:"all",records:["Blocked accounts","Report queue"],fields:["Report category","Description"]),
@@ -54,16 +54,27 @@ struct ModulePreview:View{
  @State private var feedback=""
  @State private var child=""
  @State private var duration="30"
- private var q:[String]?{(try? db.query("SELECT q.prompt,q.a,q.b,q.c,q.d,q.correct,COALESCE(p.enabled,0) FROM demographics d JOIN quiz_questions q ON d.age BETWEEN q.min_age AND q.max_age LEFT JOIN quiz_permissions p ON p.child_id=d.user_id WHERE d.user_id=? LIMIT 1",[user.id]))?.first}
- private var children:[String]{((try? db.query("SELECT u.name FROM family_links f JOIN users u ON u.id=f.child_id WHERE f.parent_id=? ORDER BY u.name",[user.id])) ?? []).compactMap{$0.first}}
+ @State private var revision=0
+ private let categories=["Games","Entertainment","Social apps"]
+ private var q:[String]?{(try? db.query("SELECT q.prompt,q.a,q.b,q.c,q.d,q.correct,COALESCE(p.enabled,0),q.id FROM demographics d JOIN quiz_questions q ON d.age BETWEEN q.min_age AND q.max_age LEFT JOIN quiz_permissions p ON p.child_id=d.user_id WHERE d.user_id=? AND d.age<18 ORDER BY q.id LIMIT 1",[user.id]))?.first}
+ private var children:[[String]]{(try? db.query("SELECT u.id,u.name FROM family_links f JOIN users u ON u.id=f.child_id JOIN demographics d ON d.user_id=u.id WHERE f.parent_id=? AND d.age<18 ORDER BY u.name",[user.id])) ?? []}
+ private var policy:[String]?{_ = revision;return (try? db.query("SELECT id,mask,minutes FROM gate_policies WHERE child_id=? ORDER BY rowid DESC LIMIT 1",[user.id]))?.first}
+ private var expiry:Double{_ = revision;return Double((try? db.query("SELECT g.created_at+p.minutes*60000 FROM gate_grants g JOIN gate_policies p ON p.id=g.policy_id WHERE g.child_id=? AND p.rowid=(SELECT MAX(rowid) FROM gate_policies WHERE child_id=g.child_id) ORDER BY g.rowid DESC LIMIT 1",[user.id]))?.first?.first ?? "") ?? 0}
+ private func selectChild(_ id:String){let row=(try? db.query("SELECT id,mask,minutes FROM gate_policies WHERE child_id=? ORDER BY rowid DESC LIMIT 1",[id]))?.first;let mask=Int(row?[1] ?? "0") ?? 0;duration=row?[2] ?? "30";for (n,name) in categories.enumerated(){values[name]=(mask & (1<<n)) != 0 ? "1":"0"};feedback=""}
+ private func savePolicy(){let mask=categories.enumerated().reduce(0){sum,item in sum+(values[item.element]=="1" ? 1<<item.offset:0)};do{_=try db.query("INSERT INTO gate_policies VALUES(?,?,?,?,?)",[UUID().uuidString,user.id,child,String(mask),duration]);revision+=1;feedback="Saved locally. Device enforcement not connected."}catch{feedback="Unable to save policy."}}
+ private func grant(_ answer:Int){guard let q=q,let p=policy,expiry<=Date().timeIntervalSince1970*1000 else{return};do{_=try db.query("INSERT INTO gate_grants(id,child_id,policy_id,question_id,answer) VALUES(?,?,?,?,?)",[UUID().uuidString,user.id,p[0],q[7],String(answer)]);revision+=1;feedback="Temporary access granted in Schoolday demo.";gate=false}catch{feedback="Try again or check parent permissions."}}
  var body:some View{
   Form{
-   if module.id=="Gate"{Section("Quiz Unlock"){Text("Preview only. No device is locked or points deducted.");Button("Preview unlock pop-up"){feedback="";gate=true}.disabled(q==nil);Text(feedback);Text("Emergency calls and essential communication always available.")}}
-   else if module.id=="FamilyControls"{Section("Family Controls"){Picker("Linked child",selection:$child){Text("Select child").tag("");ForEach(children,id:\.self){Text($0).tag($0)}}
-    ForEach(["Games","Entertainment","Social apps","Allow optional quiz skip (5 points)"],id:\.self){n in Toggle(n,isOn:Binding(get:{values[n]=="1"},set:{values[n]=$0 ? "1":"0"}))}
+   if module.id=="Gate"{Section("Quiz Unlock"){Text("Local access simulation · OS enforcement not implemented");if let p=policy,(Int(p[1]) ?? 0)>0{TimelineView(.periodic(from:.now,by:1)){context in
+    let active=expiry>context.date.timeIntervalSince1970*1000
+    VStack(alignment:.leading,spacing:12){Text(active ? "Unlocked until "+Date(timeIntervalSince1970:expiry/1000).formatted(date:.omitted,time:.shortened):"Locked (demo)")
+    ForEach(Array(categories.enumerated()),id:\.offset){item in if ((Int(p[1]) ?? 0) & (1<<item.offset)) != 0{Button(item.element+(active ? " · Available":" · Locked")){if active{feedback=item.element+" is available in this demo."}else{feedback="";gate=true}}}}
+    Button("Answer quiz to unlock · "+p[2]+" minutes"){feedback="";gate=true}.disabled(active || q==nil)}}}else{Text("Ask a linked parent to configure recreational access in Family Controls.")};Text(feedback);Text("Emergency calls and essential communication always available.")}}
+   else if module.id=="FamilyControls"{Section("Family Controls"){Picker("Linked child",selection:$child){Text("Select child").tag("");ForEach(children,id:\.self){r in Text(r[1]).tag(r[0])}}.onChange(of:child){_,id in selectChild(id)}
+    ForEach(categories,id:\.self){n in Toggle(n,isOn:Binding(get:{values[n]=="1"},set:{values[n]=$0 ? "1":"0"}))}
     Picker("Unlock duration (minutes)",selection:$duration){ForEach(["15","30","60"],id:\.self){Text($0).tag($0)}}
-    Button("Save device restriction"){}.disabled(true);Text("Preview only. Actual quiz-skip permission remains in Profile. Essential services are never gated.").font(.caption)}}
+    Button("Save local access policy",action:savePolicy).disabled(child.isEmpty);Text("Actual phone restrictions are not connected. Quiz-skip permission remains in Profile. Uncheck all to disable the demo gate.").font(.caption);Text(feedback)}}
    else{Section(record.isEmpty ? module.title:record){Text("Sample data · Not implemented").font(.caption);if ["Classroom","Calls"].contains(module.id){VStack{Image(systemName:"video").font(.largeTitle);HStack{ForEach(["Teacher","Student A","Student B"],id:\.self){n in VStack{Image(systemName:"person.crop.circle").font(.largeTitle);Text(n).font(.caption)}}};Text("Mic · Camera · Share · Leave").font(.caption)}.frame(maxWidth:.infinity).padding()};ForEach(module.fields,id:\.self){f in TextField(f,text:Binding(get:{values[f] ?? ""},set:{values[f]=$0}))};Button("Save / continue (not implemented)"){}.disabled(true)}}
-  }.sheet(isPresented:$gate){NavigationStack{Form{Section("Answer to unlock"){Text("Preview only · No points deducted");if let question=q,question.count>=7{Text(question[0]).font(.headline);ForEach(0..<4,id:\.self){n in Button(question[n+1]){if String(n)==question[5]{feedback="Unlocked (preview)";gate=false}else{feedback="Try again."}}};if question[6]=="1"{Button("Skip · 5 points (preview)"){feedback="Unlocked (preview)";gate=false}.disabled(((try? db.points(user)) ?? 0)<5)}else{Text("Skip disabled by parent")}};Text(feedback);Text("Emergency calls and essential communication always available.")}}.navigationTitle("Quiz Unlock").toolbar{ToolbarItem(placement:.confirmationAction){Button("Close preview"){gate=false}}}}}
+  }.sheet(isPresented:$gate){NavigationStack{Form{Section("Answer to unlock"){Text("Schoolday Quiz · No phone apps are actually locked");if let question=q,question.count>=8{Text(question[0]).font(.headline);ForEach(0..<4,id:\.self){n in Button(question[n+1]){grant(n)}};if question[6]=="1"{Button("Skip · 5 points (simulation)"){grant(-1)}.disabled(((try? db.points(user)) ?? 0)<5);Text("No points are deducted in this simulation.")}else{Text("Skip disabled by parent")}};Text(feedback);Text("Emergency calls and essential communication always available.")}}.navigationTitle("Quiz Unlock").toolbar{ToolbarItem(placement:.confirmationAction){Button("Close"){gate=false}}}}}
  }
 }

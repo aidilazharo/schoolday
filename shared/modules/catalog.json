@@ -99,7 +99,7 @@
     "cat": "Learn",
     "id": "Gate",
     "title": "Quiz Unlock",
-    "status": "preview",
+    "status": "partial",
     "role": "student",
     "records": [],
     "fields": []
@@ -491,7 +491,7 @@
     "cat": "Me",
     "id": "FamilyControls",
     "title": "Family Controls",
-    "status": "preview",
+    "status": "partial",
     "role": "parent",
     "records": [],
     "fields": []
