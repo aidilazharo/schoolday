@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -112,6 +113,8 @@ class MainActivity:ComponentActivity(){
     var spaces by remember{mutableStateOf(emptyList<ChatSpace>())}
     var selected by rememberSaveable(user.id){mutableStateOf("")}
     var opened by rememberSaveable(user.id){mutableStateOf(false)}
+    var groupOpen by remember(selected,tab){mutableStateOf(false)}
+    val chatState=rememberSaveableStateHolder()
     var error by remember{mutableStateOf(false)}
     var busy by remember{mutableStateOf(false)}
     val scope=rememberCoroutineScope()
@@ -120,7 +123,7 @@ class MainActivity:ComponentActivity(){
         val wide=maxWidth>=768.dp && LocalConfiguration.current.screenHeightDp>=480
         LaunchedEffect(wide){if(wide){opened=true;choosing=false}}
         val sidebarWidth=(maxWidth*0.30f).coerceIn(250.dp,390.dp)
-        BackHandler(enabled=!wide&&(opened||choosing)){if(!busy){if(choosing)choosing=false else opened=false}}
+        BackHandler(enabled=groupOpen||(!wide&&(opened||choosing))){if(!busy){if(groupOpen)groupOpen=false else if(choosing)choosing=false else opened=false}}
         Row(Modifier.fillMaxSize()){
             if(wide||!opened){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
@@ -149,11 +152,12 @@ class MainActivity:ComponentActivity(){
                             if(tab=="Chats")Text(t("Local only"),style=MaterialTheme.typography.bodySmall)
                         }
                         if(wide){Box(Modifier.weight(1f)){key(category){ModuleToolbar(SchoolModules.visible(category,user.roles,minor),moduleId,lang,busy){m->moduleId=m.id;record="";choosing=false;opened=true}}}}
-                        else TextButton(onClick={opened=false},enabled=!busy){Text(t("Back"))}
+                        if(tab=="Chats")TextButton(onClick={groupOpen=!groupOpen},enabled=!busy&&selected.isNotEmpty(),modifier=Modifier.semantics{contentDescription=groupSettingsLabel(lang)},contentPadding=PaddingValues(4.dp)){ModuleIcon("Administration",Color(0xFF333333))}
+                        if(!wide)TextButton(onClick={if(groupOpen)groupOpen=false else opened=false},enabled=!busy){Text(t("Back"))}
                     }
                     HorizontalDivider()
                     if(module.status!="local")Text(if(module.status=="partial")"Partially implemented" else "Not implemented",modifier=Modifier.padding(8.dp),color=Color(0xFFC62828))
-                    if(tab=="Chats"){if(selected.isNotEmpty())key(selected){WallView(db,user,selected,lang,busy,{busy=it},Modifier.weight(1f))}}
+                    if(tab=="Chats"){if(selected.isNotEmpty())key(selected){if(groupOpen)GroupSettings(db,user,selected,t(spaces.firstOrNull{it.id==selected}?.title?:"Chats"),lang,Modifier.weight(1f)){groupOpen=false}else chatState.SaveableStateProvider(selected){WallView(db,user,selected,lang,busy,{busy=it},Modifier.weight(1f))}}}
                     else if(kind!=null&&staff){val picked=drafts.firstOrNull{it[0]==record};if(picked!=null){Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp)){Text(picked[1],style=MaterialTheme.typography.headlineSmall);Text(picked[2]);Text(t("Draft only · Not published"));Button(onClick={record=""}){Text(t("Create draft"))}}}else key(tab){WorkspaceEditor(db,user,kind,lang,Modifier.weight(1f)){revision++}}}
                     else if(tab=="Profile")Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
                     Text(t("Full name"),style=MaterialTheme.typography.bodySmall)

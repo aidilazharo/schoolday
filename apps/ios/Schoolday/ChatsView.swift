@@ -65,6 +65,7 @@ private struct Workspace:View {
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var category="Connect"
     @State private var choosing=false
+    @State private var groupOpen=false
     @State private var moduleId="Chats"
     @State private var record=""
     @State private var revision=0
@@ -95,7 +96,7 @@ private struct Workspace:View {
                 if wide || !opened {sidebar(wide:wide).frame(width:wide ? min(max(geo.size.width*0.30,250),390):geo.size.width)}
                 if wide{Divider()}
                 if wide || opened{workspace(wide:wide)}
-            }.onChange(of:wide,initial:true){_,isWide in if isWide{opened=true;choosing=false}}
+            }.onChange(of:selected){_,_ in groupOpen=false}.onChange(of:tab){_,_ in groupOpen=false}.onChange(of:wide,initial:true){_,isWide in if isWide{opened=true;choosing=false}}
         }.task{
             do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if selected.isEmpty,let first=spaces.first{selected=first.id}}catch{self.error=true}
         }
@@ -221,6 +222,7 @@ private struct Workspace:View {
                         if tab=="Chats"{Text(t("Local only")).font(.caption2).foregroundStyle(.secondary)}
                     }.frame(minWidth:80,maxWidth:150,alignment:.leading)
                     moduleToolbar(SchoolModules.visible(category,user.roles,minor:minor),wide:true)
+                    if tab=="Chats"{groupButton}
                 }.padding(.horizontal,12).frame(height:66)
                 Divider()
             }
@@ -267,9 +269,10 @@ private struct Workspace:View {
     private func refreshPoints(){points=(try? db.points(user)) ?? points}
     private func chat(wide:Bool)->some View {
         VStack(spacing:0){
-            if !wide{HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();Button(t("Back")){opened=false}}.padding();Divider()}
-            if !selected.isEmpty {WallView(db:db,user:user,channel:selected,lang:lang).id(selected)}
+            if !wide{HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();groupButton;Button(t("Back")){if groupOpen{groupOpen=false}else{opened=false}}}.padding();Divider()}
+            if !selected.isEmpty {ZStack{WallView(db:db,user:user,channel:selected,lang:lang).id(selected).opacity(groupOpen ? 0:1).allowsHitTesting(!groupOpen).accessibilityHidden(groupOpen);if groupOpen{GroupSettings(db:db,user:user,channel:selected,title:t(spaces.first(where:{$0.id==selected})?.title ?? "Chats"),lang:lang,onClose:{groupOpen=false}).id(selected)}}}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
+    private var groupButton:some View{Button{groupOpen.toggle()}label:{Image(systemName:"gearshape").frame(width:44,height:44)}.disabled(selected.isEmpty).accessibilityLabel(GroupSettings.label(lang))}
     private func select(_ id:String,open:Bool){category="Connect";moduleId="Chats";selected=id;if open{opened=true}}
 }

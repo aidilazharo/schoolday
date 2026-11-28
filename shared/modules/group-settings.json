@@ -1,0 +1,173 @@
+{
+  "sections": [
+    [
+      "info",
+      "Group information",
+      "Group name;Description;Visibility",
+      "Save group information"
+    ],
+    [
+      "members",
+      "Members",
+      "",
+      ""
+    ],
+    [
+      "invite",
+      "Invitations & join requests",
+      "Member or invitation code;Invitation expiry;Join request note",
+      "Send invitation"
+    ],
+    [
+      "roles",
+      "Administrators & roles",
+      "Member;Proposed role;Reason",
+      "Assign role"
+    ],
+    [
+      "election",
+      "Admin election",
+      "",
+      ""
+    ],
+    [
+      "recall",
+      "Administrator recall",
+      "Administrator;Reason for recall",
+      "Start recall vote"
+    ],
+    [
+      "polls",
+      "Group polls",
+      "Question;Option 1;Option 2;Closing date",
+      "Publish poll"
+    ],
+    [
+      "permissions",
+      "Permissions",
+      "",
+      ""
+    ],
+    [
+      "rules",
+      "Group rules",
+      "Rules;Member responsibilities",
+      "Save rules"
+    ],
+    [
+      "announcements",
+      "Announcements & pinned messages",
+      "Announcement;Message reference",
+      "Pin announcement"
+    ],
+    [
+      "calls",
+      "Group calls",
+      "Meeting title;Start time",
+      "Start call"
+    ],
+    [
+      "files",
+      "Media & documents",
+      "File name;Description",
+      "Share file"
+    ],
+    [
+      "events",
+      "Group events",
+      "Event title;Date and time;Location",
+      "Create event"
+    ],
+    [
+      "tasks",
+      "Group tasks",
+      "Task;Assigned member;Due date",
+      "Assign task"
+    ],
+    [
+      "quizzes",
+      "Group quizzes",
+      "Quiz title;Question;Answer choices",
+      "Assign quiz"
+    ],
+    [
+      "attendance",
+      "Attendance",
+      "Session;Date;Member reference",
+      "Record attendance"
+    ],
+    [
+      "certificates",
+      "Certificates",
+      "Recipient;Achievement;Issuer",
+      "Issue certificate"
+    ],
+    [
+      "notes",
+      "Shared notes",
+      "Title;Note",
+      "Save note"
+    ],
+    [
+      "search",
+      "Search messages",
+      "Search text",
+      "Search messages"
+    ],
+    [
+      "notifications",
+      "Notifications",
+      "Notification preference;Mute duration",
+      "Save preference"
+    ],
+    [
+      "activity",
+      "Activity log",
+      "",
+      ""
+    ],
+    [
+      "safety",
+      "Report & moderation",
+      "Member or message reference;Reason",
+      "Submit report"
+    ],
+    [
+      "archive",
+      "Archive group",
+      "Reason",
+      "Archive group"
+    ],
+    [
+      "leave",
+      "Leave group",
+      "Reason (optional)",
+      "Leave group"
+    ]
+  ],
+  "permissions": [
+    "Send messages",
+    "Invite members",
+    "Edit group information",
+    "Remove members",
+    "Create polls",
+    "Start group video call"
+  ],
+  "actions": [
+    "Remove member",
+    "Ban member",
+    "Temporarily mute",
+    "Assign moderator",
+    "Restore membership"
+  ],
+  "policies": {
+    "open": "Community election with independent safety oversight",
+    "school": "Institution-appointed administrator",
+    "class": "Assigned educator; representatives may be elected",
+    "staff": "Institution-appointed administrator",
+    "family": "Verified family permissions",
+    "admin": "Institution-appointed administrator",
+    "university": "Institution-appointed administrator",
+    "uni-course": "Assigned lecturer; representatives may be elected"
+  }
+}
