@@ -51,3 +51,12 @@ UPDATE users SET name='Ahmad Farid Rahman' WHERE id='parent' AND name='Encik Far
 UPDATE users SET name='Nur Nadia Sofia' WHERE id='dual' AND name='Puan Nadia';
 UPDATE users SET name='Lee Wei Ming' WHERE id='admin' AND name='School Admin';
 UPDATE users SET name='Kavitha Devi' WHERE id='normal' AND name='Normal User';
+CREATE TABLE IF NOT EXISTS points_accounts(user_id TEXT PRIMARY KEY REFERENCES users(id),balance INTEGER NOT NULL CHECK(balance>=0));
+INSERT OR IGNORE INTO points_accounts(user_id,balance) SELECT id,100 FROM users;
+CREATE TABLE IF NOT EXISTS wall_posts(id TEXT PRIMARY KEY,channel_id TEXT NOT NULL,author_id TEXT NOT NULL,body TEXT NOT NULL CHECK(length(trim(body)) BETWEEN 1 AND 2000),created_at INTEGER NOT NULL,FOREIGN KEY(author_id,channel_id) REFERENCES memberships(user_id,channel_id),UNIQUE(id,channel_id));
+CREATE TABLE IF NOT EXISTS wall_comments(id TEXT PRIMARY KEY,post_id TEXT NOT NULL,channel_id TEXT NOT NULL,author_id TEXT NOT NULL,body TEXT NOT NULL CHECK(length(trim(body)) BETWEEN 1 AND 500),created_at INTEGER NOT NULL,FOREIGN KEY(post_id,channel_id) REFERENCES wall_posts(id,channel_id),FOREIGN KEY(author_id,channel_id) REFERENCES memberships(user_id,channel_id));
+CREATE TABLE IF NOT EXISTS wall_reactions(post_id TEXT NOT NULL,channel_id TEXT NOT NULL,user_id TEXT NOT NULL,PRIMARY KEY(post_id,user_id),FOREIGN KEY(post_id,channel_id) REFERENCES wall_posts(id,channel_id),FOREIGN KEY(user_id,channel_id) REFERENCES memberships(user_id,channel_id));
+CREATE INDEX IF NOT EXISTS wall_feed ON wall_posts(channel_id,created_at);
+INSERT OR IGNORE INTO wall_posts VALUES('seed-open','open','admin','Welcome to Schoolday!',1795824000000);
+INSERT OR IGNORE INTO wall_posts VALUES('seed-school','school','admin','Welcome to our school community.',1795824000000);
+INSERT OR IGNORE INTO wall_posts VALUES('seed-class','class','teacher','Remember your mathematics workbook tomorrow.',1795824000000);

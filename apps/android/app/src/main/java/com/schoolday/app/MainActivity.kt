@@ -80,6 +80,9 @@ class MainActivity:ComponentActivity(){
     var country by remember(user.id){mutableStateOf(SchooldayCountry.normalize(prefs.getString("country."+user.id,null)))}
     fun setCountry(value:String){country=value;prefs.edit().putString("country."+user.id,value).apply()}
     var showProfile by remember{mutableStateOf(false)}
+    var showRewards by remember{mutableStateOf(false)}
+    var points by remember{mutableStateOf(0)}
+    var wall by remember{mutableStateOf(true)}
     var displayName by remember{mutableStateOf(SchooldayNames.options(user.name).firstOrNull()?:user.name)}
     var nicknameMenu by remember{mutableStateOf(false)}
     fun t(key:String)=SchooldayLanguage.text(key,lang)
@@ -93,7 +96,7 @@ class MainActivity:ComponentActivity(){
     var busy by remember{mutableStateOf(false)}
     var loading by remember{mutableStateOf(true)}
     val scope=rememberCoroutineScope()
-    LaunchedEffect(user.id){try{displayName=withContext(Dispatchers.IO){db.nickname(user)};spaces=withContext(Dispatchers.IO){db.spaces(user)};selected=spaces.firstOrNull()?.id?:""}catch(e:Exception){error=true}}
+    LaunchedEffect(user.id){try{displayName=withContext(Dispatchers.IO){db.nickname(user)};points=withContext(Dispatchers.IO){db.points(user)};spaces=withContext(Dispatchers.IO){db.spaces(user)};selected=spaces.firstOrNull()?.id?:""}catch(e:Exception){error=true}}
     LaunchedEffect(selected){if(selected.isNotEmpty()){loading=true;try{messages=withContext(Dispatchers.IO){db.drafts(user,selected)}}catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error=true}finally{loading=false}}}
     fun change(value:String?){if(busy||selected.isEmpty())return;busy=true;val channel=selected
         scope.launch{try{messages=withContext(Dispatchers.IO){db.write(user,channel,value);db.drafts(user,channel)};if(value!=null)text=""}catch(e:Exception){error=true}finally{busy=false}}
@@ -107,9 +110,9 @@ class MainActivity:ComponentActivity(){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
                     Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);TextButton(onClick={showProfile=true},enabled=!busy){Text(t("Profile"))};TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
                     HorizontalDivider()
-                    Text(t("Chats"),style=MaterialTheme.typography.headlineSmall,modifier=Modifier.padding(16.dp))
+                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text(t("Chats"),style=MaterialTheme.typography.headlineSmall,modifier=Modifier.weight(1f));TextButton(onClick={showRewards=true}){Text(t("Rewards"))}}
                     LazyColumn{items(spaces,key={it.id}){space->
-                        TextButton(onClick={if(selected!=space.id){selected=space.id;messages=emptyList();text=""};opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")}
+                        TextButton(onClick={if(selected!=space.id){selected=space.id;messages=emptyList();text=""};wall=true;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")}
                         HorizontalDivider()
                     }}
                 }
@@ -119,10 +122,15 @@ class MainActivity:ComponentActivity(){
                 Column(Modifier.weight(1f).fillMaxHeight()){
                     Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically){
                         Column(Modifier.weight(1f)){Text(t(spaces.firstOrNull{it.id==selected}?.title?:"Chats"),fontWeight=FontWeight.Bold);Text(t("Local only"),style=MaterialTheme.typography.bodySmall)}
-                        TextButton(onClick={confirm=true},enabled=messages.isNotEmpty()&&!busy){Text(t("Clear"))}
+                        if(!wall)TextButton(onClick={confirm=true},enabled=messages.isNotEmpty()&&!busy){Text(t("Clear"))}
                         if(!wide)TextButton(onClick={opened=false}){Text(t("Back"))}
                     }
                     HorizontalDivider()
+                    Row(Modifier.fillMaxWidth().padding(8.dp),horizontalArrangement=Arrangement.spacedBy(8.dp)){
+                        if(wall)Button(onClick={wall=true},enabled=!busy,modifier=Modifier.weight(1f)){Text(t("Wall"))} else OutlinedButton(onClick={wall=true},enabled=!busy,modifier=Modifier.weight(1f)){Text(t("Wall"))}
+                        if(!wall)Button(onClick={wall=false},enabled=!busy,modifier=Modifier.weight(1f)){Text(t("Chat"))} else OutlinedButton(onClick={wall=false},enabled=!busy,modifier=Modifier.weight(1f)){Text(t("Chat"))}
+                    }
+                    if(wall && selected.isNotEmpty())key(selected){WallView(db,user,selected,lang,busy,{busy=it},Modifier.weight(1f))} else if(!wall){
                     if(messages.isEmpty())Box(Modifier.weight(1f).fillMaxWidth(),contentAlignment=Alignment.Center){Text(t("No saved messages"))}
                     else LazyColumn(Modifier.weight(1f).fillMaxWidth(),contentPadding=PaddingValues(16.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
                         items(messages,key={it.id}){message->Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End){Surface(shape=RoundedCornerShape(14.dp),color=Color(0xFFF1F1F1)){Column(Modifier.widthIn(max=480.dp).padding(12.dp)){Text(message.text);Text(t("Saved locally · Not sent"),style=MaterialTheme.typography.labelSmall)}}}}
@@ -132,10 +140,12 @@ class MainActivity:ComponentActivity(){
                         OutlinedTextField(text,{text=it.take(500)},placeholder={Text(t("Message"))},modifier=Modifier.weight(1f))
                         Button(onClick={change(text.trim())},enabled=!busy&&!loading&&selected.isNotEmpty()&&text.isNotBlank()){Text(t("Save"))}
                     }
+                    }
                 }
             }
         }
     }
+    if(showRewards) AlertDialog(onDismissRequest={showRewards=false},title={Text(t("Rewards"))},text={Column{Text(t("Points balance"));Text(points.toString(),style=MaterialTheme.typography.headlineLarge);Text(t("Points"))}},confirmButton={TextButton(onClick={showRewards=false}){Text(t("Done"))}})
     if(showProfile) {
         androidx.compose.ui.window.Dialog(onDismissRequest={showProfile=false},properties=androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth=false)){
             Surface(shape=RoundedCornerShape(16.dp),modifier=Modifier.padding(20.dp).widthIn(max=460.dp).fillMaxWidth()){
@@ -157,6 +167,7 @@ class MainActivity:ComponentActivity(){
                     }
                     Text(t("Choose one or two parts of your full name."),style=MaterialTheme.typography.bodySmall)
                     Text(user.email)
+                    Text(t("Points balance")+": "+points)
                     Text(SchooldayLanguage.roles(user.roles,lang))
                     LanguageMenu(lang,::setLang)
                     CountryMenu(country,lang,::setCountry)

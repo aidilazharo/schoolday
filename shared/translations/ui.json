@@ -53,7 +53,18 @@
     "Done": "Done",
     "Full name": "Full name",
     "Nickname": "Nickname",
-    "Choose one or two parts of your full name.": "Choose one or two parts of your full name."
+    "Choose one or two parts of your full name.": "Choose one or two parts of your full name.",
+    "Space": "Space",
+    "Wall": "Wall",
+    "Chat": "Chat",
+    "Write a post": "Write a post",
+    "Post": "Post",
+    "No posts yet": "No posts yet",
+    "Like": "Like",
+    "Comments": "Comments",
+    "Comment": "Comment",
+    "Points balance": "Points balance",
+    "Points": "Points"
   },
   "ms": {
     "Language": "Bahasa",
@@ -109,7 +120,18 @@
     "Done": "Selesai",
     "Full name": "Nama penuh",
     "Nickname": "Nama panggilan",
-    "Choose one or two parts of your full name.": "Pilih satu atau dua bahagian daripada nama penuh anda."
+    "Choose one or two parts of your full name.": "Pilih satu atau dua bahagian daripada nama penuh anda.",
+    "Space": "Ruang",
+    "Wall": "Dinding",
+    "Chat": "Sembang",
+    "Write a post": "Tulis catatan",
+    "Post": "Siarkan",
+    "No posts yet": "Tiada catatan lagi",
+    "Like": "Suka",
+    "Comments": "Komen",
+    "Comment": "Komen",
+    "Points balance": "Baki mata",
+    "Points": "Mata"
   },
   "zh": {
     "Language": "语言",
@@ -165,7 +187,18 @@
     "Done": "完成",
     "Full name": "全名",
     "Nickname": "昵称",
-    "Choose one or two parts of your full name.": "从全名中选择一个或两个部分。"
+    "Choose one or two parts of your full name.": "从全名中选择一个或两个部分。",
+    "Space": "空间",
+    "Wall": "动态墙",
+    "Chat": "聊天",
+    "Write a post": "撰写帖子",
+    "Post": "发布",
+    "No posts yet": "暂无帖子",
+    "Like": "赞",
+    "Comments": "评论",
+    "Comment": "评论",
+    "Points balance": "积分余额",
+    "Points": "积分"
   },
   "ta": {
     "Language": "மொழி",
@@ -221,6 +254,17 @@
     "Done": "முடிந்தது",
     "Full name": "முழுப் பெயர்",
     "Nickname": "புனைப்பெயர்",
-    "Choose one or two parts of your full name.": "உங்கள் முழுப் பெயரிலிருந்து ஒன்று அல்லது இரண்டு பகுதிகளைத் தேர்ந்தெடுக்கவும்."
+    "Choose one or two parts of your full name.": "உங்கள் முழுப் பெயரிலிருந்து ஒன்று அல்லது இரண்டு பகுதிகளைத் தேர்ந்தெடுக்கவும்.",
+    "Space": "இடம்",
+    "Wall": "சுவர்",
+    "Chat": "அரட்டை",
+    "Write a post": "இடுகை எழுதுக",
+    "Post": "பதிவிடு",
+    "No posts yet": "இன்னும் இடுகைகள் இல்லை",
+    "Like": "விருப்பம்",
+    "Comments": "கருத்துகள்",
+    "Comment": "கருத்து",
+    "Points balance": "புள்ளிகள் இருப்பு",
+    "Points": "புள்ளிகள்"
   }
 }

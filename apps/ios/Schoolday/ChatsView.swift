@@ -61,6 +61,9 @@ private struct Workspace:View {
     @AppStorage private var lang:String
     @AppStorage private var country:String
     @State private var showProfile=false
+    @State private var showRewards=false
+    @State private var points=0
+    @State private var wall=true
     @State private var displayName=""
     init(db:LocalDatabase,user:Account,logout:@escaping ()->Void){
         self.db=db;self.user=user;self.logout=logout
@@ -85,16 +88,17 @@ private struct Workspace:View {
                 if wide || opened{chat(wide:wide)}
             }
         }.task{
-            do {displayName=try db.nickname(user);spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
+            do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
         }.confirmationDialog(t("Clear local drafts?"),isPresented:$confirm){Button(t("Clear"),role:.destructive){change(nil)}}
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
         .sheet(isPresented:$showProfile){profileView}
+        .sheet(isPresented:$showRewards){NavigationStack{VStack(spacing:12){Text(t("Points balance"));Text(String(points)).font(.largeTitle.bold());Text(t("Points"))}.navigationTitle(t("Rewards")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showRewards=false}}}}}
     }
     private var sidebar:some View {
         VStack(alignment:.leading,spacing:0){
             HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button {showProfile=true} label:{Image(systemName:"person.crop.circle").frame(minWidth:44,minHeight:44)}.accessibilityLabel(t("Profile"));Button(t("Logout"),action:logout)}.padding()
             Divider()
-            Text(t("Chats")).font(.title2.bold()).padding()
+            HStack{Text(t("Chats")).font(.title2.bold());Spacer();Button{showRewards=true}label:{Label(t("Rewards"),systemImage:"star")}}.padding()
             ScrollView{
                 ForEach(spaces){space in
                     Button{select(space.id,open:true)}label:{
@@ -123,6 +127,7 @@ private struct Workspace:View {
                     Text(user.name).font(.headline)
                     nicknameMenu
                     Text(user.email)
+                    Text(t("Points balance")+": "+String(points))
                     Text(SchooldayLanguage.roles(user.roles,lang)).foregroundStyle(.secondary)
                 }
                 Section {
@@ -135,14 +140,17 @@ private struct Workspace:View {
     }
     private func chat(wide:Bool)->some View{
         VStack(spacing:0){
-            HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();Button(t("Clear")){confirm=true}.disabled(messages.isEmpty);if !wide{Button(t("Back")){opened=false}}}.padding()
+            HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();if !wall{Button(t("Clear")){confirm=true}.disabled(messages.isEmpty)};if !wide{Button(t("Back")){opened=false}}}.padding()
             Divider()
+            Picker(t("Space"),selection:$wall){Text(t("Wall")).tag(true);Text(t("Chat")).tag(false)}.pickerStyle(.segmented).padding(8)
+            if wall && !selected.isEmpty {WallView(db:db,user:user,channel:selected,lang:lang).id(selected)} else if !wall {
             if messages.isEmpty{Spacer();Text(t("No saved messages")).foregroundStyle(.secondary);Spacer()}
             else{ScrollView{LazyVStack(alignment:.trailing,spacing:12){ForEach(messages){message in VStack(alignment:.trailing){Text(message.text);Text(t("Saved locally · Not sent")).font(.caption).foregroundStyle(.secondary)}.padding().background(.thinMaterial,in:RoundedRectangle(cornerRadius:14)).frame(maxWidth:.infinity,alignment:.trailing)}}.padding()}}
             Divider()
             HStack{TextField(t("Message"),text:$text).textFieldStyle(.roundedBorder).onChange(of:text){_,v in if v.count>500{text=String(v.prefix(500))}};Button(t("Save")){change(text.trimmingCharacters(in:.whitespacesAndNewlines))}.buttonStyle(.borderedProminent).disabled(selected.isEmpty || text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty)}.padding()
+            }
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
-    private func select(_ id:String,open:Bool){do{messages=try db.drafts(user,id);selected=id;text="";if open{opened=true}}catch{self.error=true}}
+    private func select(_ id:String,open:Bool){do{messages=try db.drafts(user,id);selected=id;text="";wall=true;if open{opened=true}}catch{self.error=true}}
     private func change(_ value:String?){do{try db.write(user,selected,value);messages=try db.drafts(user,selected);if value != nil{text=""}}catch{self.error=true}}
 }

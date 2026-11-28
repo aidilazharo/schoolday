@@ -9,7 +9,7 @@ import javax.crypto.spec.PBEKeySpec
 data class Account(val id:String,val name:String,val email:String,val roles:String)
 data class ChatSpace(val id:String,val title:String)
 data class Draft(val id:String,val text:String)
-class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,2){
+class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,3){
     override fun onConfigure(db:SQLiteDatabase){db.setForeignKeyConstraintsEnabled(true)}
     override fun onCreate(db:SQLiteDatabase){
         val schema = """
@@ -61,9 +61,23 @@ INSERT OR IGNORE INTO roles VALUES ('normal','Member');
 INSERT OR IGNORE INTO memberships VALUES ('normal','open');
         """.trimIndent()
         schema.split(";").map{it.trim()}.filter{it.isNotEmpty()&&!it.startsWith("PRAGMA")}.forEach{db.execSQL(it)}
-        migrateNames(db)
+        migrateNames(db);migrateWall(db)
     }
-    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db)}
+    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db);if(oldVersion<3)migrateWall(db)}
+    private fun migrateWall(db:SQLiteDatabase){
+        val migration="""
+CREATE TABLE IF NOT EXISTS points_accounts(user_id TEXT PRIMARY KEY REFERENCES users(id),balance INTEGER NOT NULL CHECK(balance>=0));
+INSERT OR IGNORE INTO points_accounts(user_id,balance) SELECT id,100 FROM users;
+CREATE TABLE IF NOT EXISTS wall_posts(id TEXT PRIMARY KEY,channel_id TEXT NOT NULL,author_id TEXT NOT NULL,body TEXT NOT NULL CHECK(length(trim(body)) BETWEEN 1 AND 2000),created_at INTEGER NOT NULL,FOREIGN KEY(author_id,channel_id) REFERENCES memberships(user_id,channel_id),UNIQUE(id,channel_id));
+CREATE TABLE IF NOT EXISTS wall_comments(id TEXT PRIMARY KEY,post_id TEXT NOT NULL,channel_id TEXT NOT NULL,author_id TEXT NOT NULL,body TEXT NOT NULL CHECK(length(trim(body)) BETWEEN 1 AND 500),created_at INTEGER NOT NULL,FOREIGN KEY(post_id,channel_id) REFERENCES wall_posts(id,channel_id),FOREIGN KEY(author_id,channel_id) REFERENCES memberships(user_id,channel_id));
+CREATE TABLE IF NOT EXISTS wall_reactions(post_id TEXT NOT NULL,channel_id TEXT NOT NULL,user_id TEXT NOT NULL,PRIMARY KEY(post_id,user_id),FOREIGN KEY(post_id,channel_id) REFERENCES wall_posts(id,channel_id),FOREIGN KEY(user_id,channel_id) REFERENCES memberships(user_id,channel_id));
+CREATE INDEX IF NOT EXISTS wall_feed ON wall_posts(channel_id,created_at);
+INSERT OR IGNORE INTO wall_posts VALUES('seed-open','open','admin','Welcome to Schoolday!',1795824000000);
+INSERT OR IGNORE INTO wall_posts VALUES('seed-school','school','admin','Welcome to our school community.',1795824000000);
+INSERT OR IGNORE INTO wall_posts VALUES('seed-class','class','teacher','Remember your mathematics workbook tomorrow.',1795824000000);
+        """.trimIndent()
+        migration.split(";").map{it.trim()}.filter{it.isNotEmpty()}.forEach{db.execSQL(it)}
+    }
     private fun migrateNames(db:SQLiteDatabase){
         val migration="""
 CREATE TABLE IF NOT EXISTS user_nicknames(user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,nickname TEXT NOT NULL CHECK(length(trim(nickname))>0));
@@ -76,7 +90,7 @@ UPDATE users SET name='Kavitha Devi' WHERE id='normal' AND name='Normal User';
         """.trimIndent()
         migration.split(";").map{it.trim()}.filter{it.isNotEmpty()}.forEach{db.execSQL(it)}
     }
-    private fun rows(sql:String,vararg args:String):List<List<String>> = readableDatabase.rawQuery(sql,args).use{cursor->
+    fun rows(sql:String,vararg args:String):List<List<String>> = readableDatabase.rawQuery(sql,args).use{cursor->
         buildList{while(cursor.moveToNext())add((0 until cursor.columnCount).map{cursor.getString(it)?:""})}
     }
     private val users="SELECT u.id,u.name,u.email,(SELECT group_concat(role,' + ') FROM (SELECT role FROM roles WHERE user_id=u.id ORDER BY role)) FROM users u"

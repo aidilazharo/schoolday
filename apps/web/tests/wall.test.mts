@@ -1,0 +1,7 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync} from 'node:fs';
+const schema=readFileSync(new URL('../../../shared/database/schema.sql',import.meta.url),'utf8');
+test('100 points once per user, preserved on migration',()=>{const db=new DatabaseSync(':memory:');try{db.exec(schema);assert.equal(db.prepare('SELECT count(*) AS n FROM points_accounts WHERE balance=100').get()?.n,6);db.exec("UPDATE points_accounts SET balance=70 WHERE user_id='student'");db.exec(schema);assert.equal(db.prepare("SELECT balance FROM points_accounts WHERE user_id='student'").get()?.balance,70)}finally{db.close()}});
+test('wall memberships, comments and one like per account',()=>{const db=new DatabaseSync(':memory:');try{db.exec(schema);assert.throws(()=>db.exec("INSERT INTO wall_posts VALUES('bad','staff','student','no',1)"));assert.throws(()=>db.exec("INSERT INTO wall_comments VALUES('bad','seed-class','class','normal','no',1)"));db.exec("INSERT INTO wall_reactions VALUES('seed-class','class','student')");assert.throws(()=>db.exec("INSERT INTO wall_reactions VALUES('seed-class','class','student')"));assert.throws(()=>db.exec("INSERT INTO wall_reactions VALUES('seed-class','open','normal')"));db.exec("INSERT INTO wall_comments VALUES('ok','seed-class','class','student','yes',1)");assert.equal(db.prepare("SELECT count(*) AS n FROM wall_comments").get()?.n,1)}finally{db.close()}});
