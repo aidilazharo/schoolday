@@ -66,3 +66,7 @@ Supersedes separate Wall/Chat views. Posts and shared local chat messages are me
 ## Remember local session
 
 The signed-in demo account ID is retained locally across refresh, app relaunch and updates until Logout. Applies to both sample and provisioned normal test accounts. The saved ID is resolved against SQLite on startup; missing accounts clear the session. Passwords are not saved. Browser storage, iOS AppStorage and Android SharedPreferences are used. Clearing local data or reinstalling can remove the session. This is demo convenience only, not a secure production session; production requires authenticated, revocable tokens or device-bound keys.
+
+## Family and points demo
+
+Eight local accounts including children ages 8, 11 and 15 linked to the two sample parents. Shared SQLite migration v5 adds transactional point actions, avatar presets (10 points), age-based quiz answers and parent-authorized skips (5 points), local QR identifiers, friend requests and staff attendance. RM10/100 points purchases are simulations for adults only. No real payment, FFMSP, verified identity or remote sync. Parent requests never grant access automatically. Existing balances are preserved. QR tokens are opaque local identifiers, not authentication secrets. New feature labels and questions are English until localized. Camera scanning is not implemented; paste a decoded identity code. All sample names and ages are fictional.

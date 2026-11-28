@@ -1,0 +1,11 @@
+{
+  "children": "SELECT u.id,u.name,d.age,p.balance,COALESCE(q.enabled,0) FROM family_links f JOIN users u ON u.id=f.child_id JOIN demographics d ON d.user_id=u.id JOIN points_accounts p ON p.user_id=u.id LEFT JOIN quiz_permissions q ON q.child_id=u.id JOIN roles r ON r.user_id=f.parent_id AND r.role='Parent' WHERE f.parent_id=? ORDER BY d.age",
+  "parents": "SELECT u.name FROM family_links f JOIN users u ON u.id=f.parent_id WHERE f.child_id=? ORDER BY u.name",
+  "quiz": "SELECT q.id,q.prompt,q.a,q.b,q.c,q.d,COALESCE(t.status,''),COALESCE(p.enabled,0) FROM demographics d JOIN quiz_questions q ON d.age BETWEEN q.min_age AND q.max_age LEFT JOIN quiz_attempts t ON t.user_id=d.user_id AND t.question_id=q.id LEFT JOIN quiz_permissions p ON p.child_id=d.user_id WHERE d.user_id=? ORDER BY q.id",
+  "activity": "SELECT reason,delta FROM point_activity WHERE user_id=? ORDER BY created_at DESC,id DESC",
+  "requests": "SELECT r.actor,r.target,r.kind,r.status,u.name FROM identity_requests r JOIN users u ON u.id=CASE WHEN r.actor=? THEN r.target ELSE r.actor END WHERE r.actor=? OR r.target=?",
+  "avatar": "SELECT style FROM avatars WHERE user_id=?",
+  "token": "SELECT token FROM identity_tokens WHERE user_id=?",
+  "age": "SELECT age FROM demographics WHERE user_id=?",
+  "resolve": "SELECT user_id FROM identity_tokens WHERE token=?"
+}
