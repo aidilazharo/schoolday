@@ -25,3 +25,10 @@ fun LocalDatabase.wallAction(user:Account,channel:String,action:String,body:Stri
   db.setTransactionSuccessful()
  }finally{db.endTransaction()}
 }
+
+data class SpaceMessage(val id:String,val authorId:String,val name:String,val body:String,val createdAt:Long,val draft:Boolean)
+fun LocalDatabase.spaceMessages(user:Account,channel:String)=rows("SELECT s.id,s.author_id AS authorId,u.name,COALESCE(n.nickname,'') AS nickname,s.body,s.created_at AS createdAt,0 AS draft FROM space_messages s JOIN users u ON u.id=s.author_id LEFT JOIN user_nicknames n ON n.user_id=u.id JOIN memberships m ON m.channel_id=s.channel_id AND m.user_id=? WHERE s.channel_id=? UNION ALL SELECT d.id,d.user_id,u.name,COALESCE(n.nickname,''),d.body,d.created_at,1 FROM drafts d JOIN users u ON u.id=d.user_id LEFT JOIN user_nicknames n ON n.user_id=u.id JOIN memberships m ON m.user_id=d.user_id AND m.channel_id=d.channel_id WHERE d.user_id=? AND d.channel_id=? ORDER BY createdAt,id",user.id,channel,user.id,channel).map{r->SpaceMessage(r[0],r[1],r[3].ifEmpty{r[2]},r[4],r[5].toLong(),r[6]=="1")}
+fun LocalDatabase.sendSpaceMessage(user:Account,channel:String,body:String){
+ val text=body.trim();require(text.isNotEmpty()&&text.length<=500&&spaces(user).any{it.id==channel})
+ writableDatabase.execSQL("INSERT INTO space_messages VALUES(?,?,?,?,?)",arrayOf(UUID.randomUUID().toString(),channel,user.id,text,System.currentTimeMillis()))
+}

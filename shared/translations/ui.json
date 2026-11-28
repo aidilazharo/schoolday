@@ -64,7 +64,8 @@
     "Comments": "Comments",
     "Comment": "Comment",
     "Points balance": "Points balance",
-    "Points": "Points"
+    "Points": "Points",
+    "Send": "Send"
   },
   "ms": {
     "Language": "Bahasa",
@@ -131,7 +132,8 @@
     "Comments": "Komen",
     "Comment": "Komen",
     "Points balance": "Baki mata",
-    "Points": "Mata"
+    "Points": "Mata",
+    "Send": "Hantar"
   },
   "zh": {
     "Language": "语言",
@@ -198,7 +200,8 @@
     "Comments": "评论",
     "Comment": "评论",
     "Points balance": "积分余额",
-    "Points": "积分"
+    "Points": "积分",
+    "Send": "发送"
   },
   "ta": {
     "Language": "மொழி",
@@ -265,6 +268,7 @@
     "Comments": "கருத்துகள்",
     "Comment": "கருத்து",
     "Points balance": "புள்ளிகள் இருப்பு",
-    "Points": "புள்ளிகள்"
+    "Points": "புள்ளிகள்",
+    "Send": "அனுப்பு"
   }
 }

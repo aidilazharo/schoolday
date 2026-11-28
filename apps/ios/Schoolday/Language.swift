@@ -66,7 +66,8 @@ enum SchooldayLanguage {
 "Comments":"Comments",
 "Comment":"Comment",
 "Points balance":"Points balance",
-"Points":"Points"],
+"Points":"Points",
+"Send":"Send"],
 "ms": ["Language":"Bahasa",
 "Sign in":"Log masuk",
 "Sample user":"Pengguna contoh",
@@ -131,7 +132,8 @@ enum SchooldayLanguage {
 "Comments":"Komen",
 "Comment":"Komen",
 "Points balance":"Baki mata",
-"Points":"Mata"],
+"Points":"Mata",
+"Send":"Hantar"],
 "zh": ["Language":"语言",
 "Sign in":"登录",
 "Sample user":"示例用户",
@@ -196,7 +198,8 @@ enum SchooldayLanguage {
 "Comments":"评论",
 "Comment":"评论",
 "Points balance":"积分余额",
-"Points":"积分"],
+"Points":"积分",
+"Send":"发送"],
 "ta": ["Language":"மொழி",
 "Sign in":"உள்நுழைக",
 "Sample user":"மாதிரி பயனர்",
@@ -261,7 +264,8 @@ enum SchooldayLanguage {
 "Comments":"கருத்துகள்",
 "Comment":"கருத்து",
 "Points balance":"புள்ளிகள் இருப்பு",
-"Points":"புள்ளிகள்"]]
+"Points":"புள்ளிகள்",
+"Send":"அனுப்பு"]]
     static func text(_ key:String,_ lang:String)->String {strings[lang]?[key] ?? key}
     static func roles(_ value:String,_ lang:String)->String {value.components(separatedBy:" + ").map{text($0,lang)}.joined(separator:" + ")}
 }

@@ -58,3 +58,7 @@ The chat list no longer displays the signed-in user's name or role above convers
 ## Spaces and opening points
 
 Each existing membership-based space has a default Wall tab and a Chat tab. Local SQLite posts, comments and toggled likes are shared by sample users on the same installation who belong to that space. Existing chat drafts remain private local outboxes, not delivered messages. All provisioned accounts receive 100 points on migration; INSERT OR IGNORE preserves existing balances. Points are demonstration-only, not redeemable, transferable or FFMSP-backed. Future registration must provision a points account as part of registration. No remote synchronization, media, direct messages, moderation/reporting or post-to-chat sharing is implemented. Use fictional content only.
+
+## Unified Space timeline
+
+Supersedes separate Wall/Chat views. Posts and shared local chat messages are merged by timestamp and stable ID in one timeline, with a composer mode for Chat or Post. Existing drafts are included only for their owner and marked not sent; they are not silently published. Existing post IDs, comments, reactions, points and memberships are preserved. SQLite v4 seeds fictional messages and posts from all six accounts, restricted to existing memberships. New messages are shared locally on the same installation only, not transmitted. No media uploads, delivery receipts, cross-device sync or direct private messaging yet. Composer mode is not a timeline filter. No automatic publishing of private drafts.

@@ -71,7 +71,8 @@ object SchooldayLanguage {
 "Comments" to "Comments",
 "Comment" to "Comment",
 "Points balance" to "Points balance",
-"Points" to "Points"),
+"Points" to "Points",
+"Send" to "Send"),
 "ms" to mapOf("Language" to "Bahasa",
 "Sign in" to "Log masuk",
 "Sample user" to "Pengguna contoh",
@@ -136,7 +137,8 @@ object SchooldayLanguage {
 "Comments" to "Komen",
 "Comment" to "Komen",
 "Points balance" to "Baki mata",
-"Points" to "Mata"),
+"Points" to "Mata",
+"Send" to "Hantar"),
 "zh" to mapOf("Language" to "语言",
 "Sign in" to "登录",
 "Sample user" to "示例用户",
@@ -201,7 +203,8 @@ object SchooldayLanguage {
 "Comments" to "评论",
 "Comment" to "评论",
 "Points balance" to "积分余额",
-"Points" to "积分"),
+"Points" to "积分",
+"Send" to "发送"),
 "ta" to mapOf("Language" to "மொழி",
 "Sign in" to "உள்நுழைக",
 "Sample user" to "மாதிரி பயனர்",
@@ -266,7 +269,8 @@ object SchooldayLanguage {
 "Comments" to "கருத்துகள்",
 "Comment" to "கருத்து",
 "Points balance" to "புள்ளிகள் இருப்பு",
-"Points" to "புள்ளிகள்"))
+"Points" to "புள்ளிகள்",
+"Send" to "அனுப்பு"))
     fun text(key:String,lang:String)=strings[lang]?.get(key)?:key
     fun roles(value:String,lang:String)=value.split(" + ").joinToString(" + "){text(it,lang)}
     fun normalize(value:String?)=if(options.any{it.first==value}) value!! else "ms"

@@ -63,7 +63,6 @@ private struct Workspace:View {
     @State private var showProfile=false
     @State private var showRewards=false
     @State private var points=0
-    @State private var wall=true
     @State private var displayName=""
     init(db:LocalDatabase,user:Account,logout:@escaping ()->Void){
         self.db=db;self.user=user;self.logout=logout
@@ -74,10 +73,7 @@ private struct Workspace:View {
     let logout:()->Void
     @State private var spaces:[ChatSpace]=[]
     @State private var selected=""
-    @State private var messages:[LocalDraft]=[]
-    @State private var text=""
     @State private var opened=false
-    @State private var confirm=false
     @State private var error=false
     var body:some View {
         GeometryReader{ geo in
@@ -89,7 +85,7 @@ private struct Workspace:View {
             }
         }.task{
             do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
-        }.confirmationDialog(t("Clear local drafts?"),isPresented:$confirm){Button(t("Clear"),role:.destructive){change(nil)}}
+        }
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
         .sheet(isPresented:$showProfile){profileView}
         .sheet(isPresented:$showRewards){NavigationStack{VStack(spacing:12){Text(t("Points balance"));Text(String(points)).font(.largeTitle.bold());Text(t("Points"))}.navigationTitle(t("Rewards")).toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showRewards=false}}}}}
@@ -138,19 +134,12 @@ private struct Workspace:View {
              .toolbar{ToolbarItem(placement:.confirmationAction){Button(t("Done")){showProfile=false}}}
         }
     }
-    private func chat(wide:Bool)->some View{
+    private func chat(wide:Bool)->some View {
         VStack(spacing:0){
-            HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();if !wall{Button(t("Clear")){confirm=true}.disabled(messages.isEmpty)};if !wide{Button(t("Back")){opened=false}}}.padding()
+            HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();if !wide{Button(t("Back")){opened=false}}}.padding()
             Divider()
-            Picker(t("Space"),selection:$wall){Text(t("Wall")).tag(true);Text(t("Chat")).tag(false)}.pickerStyle(.segmented).padding(8)
-            if wall && !selected.isEmpty {WallView(db:db,user:user,channel:selected,lang:lang).id(selected)} else if !wall {
-            if messages.isEmpty{Spacer();Text(t("No saved messages")).foregroundStyle(.secondary);Spacer()}
-            else{ScrollView{LazyVStack(alignment:.trailing,spacing:12){ForEach(messages){message in VStack(alignment:.trailing){Text(message.text);Text(t("Saved locally · Not sent")).font(.caption).foregroundStyle(.secondary)}.padding().background(.thinMaterial,in:RoundedRectangle(cornerRadius:14)).frame(maxWidth:.infinity,alignment:.trailing)}}.padding()}}
-            Divider()
-            HStack{TextField(t("Message"),text:$text).textFieldStyle(.roundedBorder).onChange(of:text){_,v in if v.count>500{text=String(v.prefix(500))}};Button(t("Save")){change(text.trimmingCharacters(in:.whitespacesAndNewlines))}.buttonStyle(.borderedProminent).disabled(selected.isEmpty || text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty)}.padding()
-            }
+            if !selected.isEmpty {WallView(db:db,user:user,channel:selected,lang:lang).id(selected)}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
-    private func select(_ id:String,open:Bool){do{messages=try db.drafts(user,id);selected=id;text="";wall=true;if open{opened=true}}catch{self.error=true}}
-    private func change(_ value:String?){do{try db.write(user,selected,value);messages=try db.drafts(user,selected);if value != nil{text=""}}catch{self.error=true}}
+    private func select(_ id:String,open:Bool){selected=id;if open{opened=true}}
 }

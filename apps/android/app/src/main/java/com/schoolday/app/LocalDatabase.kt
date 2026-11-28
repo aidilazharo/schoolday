@@ -9,7 +9,7 @@ import javax.crypto.spec.PBEKeySpec
 data class Account(val id:String,val name:String,val email:String,val roles:String)
 data class ChatSpace(val id:String,val title:String)
 data class Draft(val id:String,val text:String)
-class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,3){
+class LocalDatabase(context:Context):SQLiteOpenHelper(context,"schoolday.sqlite",null,4){
     override fun onConfigure(db:SQLiteDatabase){db.setForeignKeyConstraintsEnabled(true)}
     override fun onCreate(db:SQLiteDatabase){
         val schema = """
@@ -61,9 +61,50 @@ INSERT OR IGNORE INTO roles VALUES ('normal','Member');
 INSERT OR IGNORE INTO memberships VALUES ('normal','open');
         """.trimIndent()
         schema.split(";").map{it.trim()}.filter{it.isNotEmpty()&&!it.startsWith("PRAGMA")}.forEach{db.execSQL(it)}
-        migrateNames(db);migrateWall(db)
+        migrateNames(db);migrateWall(db);migrateTimeline(db)
     }
-    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db);if(oldVersion<3)migrateWall(db)}
+    override fun onUpgrade(db:SQLiteDatabase,oldVersion:Int,newVersion:Int){if(oldVersion<2)migrateNames(db);if(oldVersion<3)migrateWall(db);if(oldVersion<4)migrateTimeline(db)}
+    private fun migrateTimeline(db:SQLiteDatabase){
+        val migration="""
+CREATE TABLE IF NOT EXISTS space_messages(id TEXT PRIMARY KEY,channel_id TEXT NOT NULL,author_id TEXT NOT NULL,body TEXT NOT NULL CHECK(length(trim(body)) BETWEEN 1 AND 500),created_at INTEGER NOT NULL,FOREIGN KEY(author_id,channel_id) REFERENCES memberships(user_id,channel_id));
+CREATE INDEX IF NOT EXISTS space_message_order ON space_messages(channel_id,created_at);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-0','open','student','Hi everyone! Looking forward to sports day.',1795824120000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-1','open','teacher','Welcome! Please keep our community friendly.',1795824240000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-2','open','normal','Hello, glad to join the community.',1795824360000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-3','open','parent','Thanks for the updates.',1795824480000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-4','open','dual','Happy to help with school activities.',1795824600000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-5','open','admin','Please check the school calendar for announcements.',1795824720000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-6','school','admin','The school activity schedule is ready.',1795824840000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-7','school','parent','Thank you for sharing.',1795824960000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-8','school','student','Can we join the science club?',1795825080000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-9','school','teacher','Yes, please register with your class teacher.',1795825200000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-10','school','dual','I can help with the registration.',1795825320000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-11','class','student','Good morning, teacher!',1795825440000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-12','class','teacher','Good morning. Please bring your workbook.',1795825560000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-13','class','dual','Remember to complete page 25.',1795825680000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-14','class','student','Thank you, teacher!',1795825800000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-15','family','parent','See you after school.',1795825920000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-16','family','dual','I will pick up the books on the way.',1795826040000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-17','staff','teacher','I have prepared the lesson materials.',1795826160000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-18','staff','dual','I can review them this afternoon.',1795826280000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-19','staff','admin','Thank you for coordinating.',1795826400000);
+INSERT OR IGNORE INTO space_messages VALUES('sample-chat-20','admin','admin','The next administration meeting is on Monday.',1795826520000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-0','open','student','Science club: our team has finished the model!',1795824300000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-1','open','normal','Community notice: happy to join the school activity group.',1795824540000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-2','open','parent','Volunteer invitation: families are welcome to help at the next event.',1795824780000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-3','school','dual','Reminder: bring reusable water bottles for school activities.',1795825020000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-4','class','teacher','Mathematics assignment: complete page 25 before the next lesson.',1795825260000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-5','staff','admin','Staff announcement: please review the upcoming activity plan.',1795825500000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-6','family','parent','Family reminder: bring the library books tomorrow.',1795825740000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-7','admin','admin','Administration update: review the school calendar.',1795825980000);
+INSERT OR IGNORE INTO wall_posts VALUES('sample-post-8','staff','teacher','Lesson resources are ready for the next meeting.',1795826220000);
+INSERT OR IGNORE INTO wall_comments VALUES('sample-comment-0','sample-post-4','class','student','Thank you, teacher.',1795826400000);
+INSERT OR IGNORE INTO wall_comments VALUES('sample-comment-1','sample-post-2','open','dual','I would be happy to help.',1795826460000);
+INSERT OR IGNORE INTO wall_reactions VALUES('sample-post-4','class','student');
+INSERT OR IGNORE INTO wall_reactions VALUES('sample-post-2','open','normal');
+        """.trimIndent()
+        migration.split(";").map{it.trim()}.filter{it.isNotEmpty()}.forEach{db.execSQL(it)}
+    }
     private fun migrateWall(db:SQLiteDatabase){
         val migration="""
 CREATE TABLE IF NOT EXISTS points_accounts(user_id TEXT PRIMARY KEY REFERENCES users(id),balance INTEGER NOT NULL CHECK(balance>=0));
