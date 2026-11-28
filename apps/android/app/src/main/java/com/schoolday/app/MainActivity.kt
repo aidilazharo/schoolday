@@ -35,6 +35,7 @@ class MainActivity:ComponentActivity(){
 }
 @Composable private fun Schoolday(db:LocalDatabase){
     val lang="ms"
+    val sessionPrefs=LocalContext.current.getSharedPreferences("schoolday.session",0)
     fun t(key:String)=SchooldayLanguage.text(key,lang)
     var user by remember{mutableStateOf<Account?>(null)}
     var accounts by remember{mutableStateOf(emptyList<Account>())}
@@ -45,17 +46,23 @@ class MainActivity:ComponentActivity(){
     var error by remember{mutableStateOf("")}
     var busy by remember{mutableStateOf(false)}
     val scope=rememberCoroutineScope()
-    LaunchedEffect(db){try{accounts=withContext(Dispatchers.IO){db.samples()}}catch(e:Exception){error="Unable to open local database."}}
+    fun rememberAccount(account:Account){sessionPrefs.edit().putString("account",account.id).apply();user=account}
+    LaunchedEffect(db){try{
+        val id=sessionPrefs.getString("account",null)
+        val result=withContext(Dispatchers.IO){db.samples() to id?.let{db.accountById(it)}}
+        accounts=result.first;user=result.second
+        if(id!=null&&result.second==null)sessionPrefs.edit().remove("account").apply()
+    }catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error="Unable to open local database."}}
     val current=user
     Surface(Modifier.fillMaxSize()){
-        if(current!=null)key(current.id){Workspace(db,current){user=null;normal=false;email="";password="";error=""}}
+        if(current!=null)key(current.id){Workspace(db,current){sessionPrefs.edit().remove("account").apply();user=null;normal=false;email="";password="";error=""}}
         else Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(24.dp),contentAlignment=Alignment.Center){
             Column(Modifier.widthIn(max=420.dp).fillMaxWidth().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)){
                 Text("schoolday",style=MaterialTheme.typography.headlineLarge,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic)
                 Text(t("Sign in"),style=MaterialTheme.typography.headlineSmall)
                 Box{
                     OutlinedButton(onClick={menu=true},enabled=accounts.isNotEmpty()&&!busy,modifier=Modifier.fillMaxWidth()){Text(t("Select sample user")+" ▾")}
-                    DropdownMenu(expanded=menu,onDismissRequest={menu=false}){accounts.forEach{account->DropdownMenuItem(text={Text(account.name+" — "+SchooldayLanguage.roles(account.roles,lang))},onClick={menu=false;error="";user=account})}}
+                    DropdownMenu(expanded=menu,onDismissRequest={menu=false}){accounts.forEach{account->DropdownMenuItem(text={Text(account.name+" — "+SchooldayLanguage.roles(account.roles,lang))},onClick={menu=false;error="";rememberAccount(account)})}}
                 }
                 Button(onClick={normal=!normal;error=""},modifier=Modifier.fillMaxWidth(),enabled=!busy){Text(t(if(normal)"Hide login form" else "Normal user login"))}
                 if(normal){
@@ -64,7 +71,7 @@ class MainActivity:ComponentActivity(){
                     Button(onClick={
                         busy=true;error=""
                         val enteredEmail=email;val enteredPassword=password
-                        scope.launch{try{val account=withContext(Dispatchers.IO){db.login(enteredEmail,enteredPassword)};if(account!=null){user=account;password=""}else error="Invalid email or password."}catch(e:Exception){error="Sign-in unavailable."}finally{busy=false}}
+                        scope.launch{try{val account=withContext(Dispatchers.IO){db.login(enteredEmail,enteredPassword)};if(account!=null){rememberAccount(account);password=""}else error="Invalid email or password."}catch(e:Exception){error="Sign-in unavailable."}finally{busy=false}}
                     },enabled=!busy&&email.isNotBlank()&&password.isNotEmpty(),modifier=Modifier.fillMaxWidth()){Text(t("Login"))}
                 }
                 Text(t("Local test accounts only. Do not enter real credentials."),style=MaterialTheme.typography.bodySmall)

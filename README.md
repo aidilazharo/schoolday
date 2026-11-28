@@ -62,3 +62,7 @@ Each existing membership-based space has a default Wall tab and a Chat tab. Loca
 ## Unified Space timeline
 
 Supersedes separate Wall/Chat views. Posts and shared local chat messages are merged by timestamp and stable ID in one timeline, with a composer mode for Chat or Post. Existing drafts are included only for their owner and marked not sent; they are not silently published. Existing post IDs, comments, reactions, points and memberships are preserved. SQLite v4 seeds fictional messages and posts from all six accounts, restricted to existing memberships. New messages are shared locally on the same installation only, not transmitted. No media uploads, delivery receipts, cross-device sync or direct private messaging yet. Composer mode is not a timeline filter. No automatic publishing of private drafts.
+
+## Remember local session
+
+The signed-in demo account ID is retained locally across refresh, app relaunch and updates until Logout. Applies to both sample and provisioned normal test accounts. The saved ID is resolved against SQLite on startup; missing accounts clear the session. Passwords are not saved. Browser storage, iOS AppStorage and Android SharedPreferences are used. Clearing local data or reinstalling can remove the session. This is demo convenience only, not a secure production session; production requires authenticated, revocable tokens or device-bound keys.

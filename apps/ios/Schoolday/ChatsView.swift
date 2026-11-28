@@ -6,17 +6,18 @@ struct ChatsView: View {
     @State private var db:LocalDatabase?
     @State private var accounts:[Account]=[]
     @State private var user:Account?
+    @AppStorage("schoolday.session.account") private var sessionAccount=""
     @State private var normal=false
     @State private var email=""
     @State private var password=""
     @State private var error=""
     var body:some View {
         Group {
-            if let db=db,let user=user { Workspace(db:db,user:user){ self.user=nil;normal=false;email="";password="";error="" }.id(user.id) }
+            if let db=db,let user=user { Workspace(db:db,user:user){ sessionAccount="";self.user=nil;normal=false;email="";password="";error="" }.id(user.id) }
             else { loginView }
         }.tint(.primary).task {
             guard db==nil else{return}
-            do{let store=try LocalDatabase();accounts=try store.samples();db=store}
+            do{let store=try LocalDatabase();accounts=try store.samples();db=store;if !sessionAccount.isEmpty{user=try store.accountById(sessionAccount);if user==nil{sessionAccount=""}}}
             catch{self.error="Unable to open local database."}
         }
     }
@@ -36,7 +37,7 @@ struct ChatsView: View {
     private var sampleMenu:some View {
         Menu(t("Select sample user")) {
             ForEach(accounts) { account in
-                Button(account.name+" — "+SchooldayLanguage.roles(account.roles,lang)) {error="";user=account}
+                Button(account.name+" — "+SchooldayLanguage.roles(account.roles,lang)) {error="";remember(account)}
             }
         }.frame(maxWidth:.infinity,alignment:.leading).padding().background(.thinMaterial,in:RoundedRectangle(cornerRadius:10))
     }
@@ -47,9 +48,10 @@ struct ChatsView: View {
             Button(t("Login"),action:signIn).buttonStyle(.borderedProminent).disabled(db==nil || email.isEmpty || password.isEmpty)
         }
     }
+    private func remember(_ account:Account){sessionAccount=account.id;user=account}
     private func signIn(){
         do {
-            if let account=try db?.login(email:email,password:password){user=account;password="";error=""}
+            if let account=try db?.login(email:email,password:password){remember(account);password="";error=""}
             else{error="Invalid email or password."}
         }catch{self.error="Sign-in unavailable."}
     }

@@ -94,5 +94,7 @@ INSERT OR IGNORE INTO wall_posts VALUES('sample-post-7','admin','admin','Adminis
 INSERT OR IGNORE INTO wall_posts VALUES('sample-post-8','staff','teacher','Lesson resources are ready for the next meeting.',1795826220000);
 INSERT OR IGNORE INTO wall_comments VALUES('sample-comment-0','sample-post-4','class','student','Thank you, teacher.',1795826400000);
 INSERT OR IGNORE INTO wall_comments VALUES('sample-comment-1','sample-post-2','open','dual','I would be happy to help.',1795826460000);
-INSERT OR IGNORE INTO wall_reactions VALUES('sample-post-4','class','student');
-INSERT OR IGNORE INTO wall_reactions VALUES('sample-post-2','open','normal');
+CREATE TABLE IF NOT EXISTS seed_markers(id TEXT PRIMARY KEY);
+INSERT OR IGNORE INTO wall_reactions SELECT 'sample-post-4','class','student' WHERE NOT EXISTS(SELECT 1 FROM seed_markers WHERE id='timeline-v4');
+INSERT OR IGNORE INTO wall_reactions SELECT 'sample-post-2','open','normal' WHERE NOT EXISTS(SELECT 1 FROM seed_markers WHERE id='timeline-v4');
+INSERT OR IGNORE INTO seed_markers VALUES('timeline-v4');

@@ -1,7 +1,7 @@
 import {useEffect,useState,type FormEvent} from 'react';
 import {createRoot} from 'react-dom/client';
 import type {Database} from 'sql.js';
-import {openDatabase,samples,login,channels,nickname,saveNickname,points,type User} from './database';
+import {openDatabase,samples,login,accountById,channels,nickname,saveNickname,points,type User} from './database';
 import './style.css';
 import {Wall} from './Wall';
 import {nicknameOptions} from './names';
@@ -26,17 +26,23 @@ function App(){
   const [email,setEmail]=useState('');
   const [password,setPassword]=useState('');
   const [busy,setBusy]=useState(false);
-  useEffect(()=>{openDatabase().then(setDb).catch(()=>setError('Unable to open the local database.'))},[]);
+  useEffect(()=>{openDatabase().then(store=>{
+    let restored:User|undefined;
+    try{const id=localStorage.getItem('schoolday.session.account');if(id){restored=accountById(store,id);if(!restored)localStorage.removeItem('schoolday.session.account')}}catch{/* Local storage unavailable: login remains available. */}
+    setDb(store);if(restored)setUser(restored);
+  }).catch(()=>setError('Unable to open the local database.'))},[]);
+  function remember(account:User){try{localStorage.setItem('schoolday.session.account',account.id)}catch{/* Session still works in memory. */}setUser(account)}
+  function logout(){try{localStorage.removeItem('schoolday.session.account')}catch{/* Storage unavailable. */}setUser(null);setNormal(false);setEmail('');setPassword('');setError('')}
   async function signIn(e:FormEvent){
     e.preventDefault();if(!db||busy)return;setBusy(true);setError('');
-    try{const u=await login(db,email,password);if(u){setUser(u);setPassword('')}else setError('Invalid email or password.')}
+    try{const u=await login(db,email,password);if(u){remember(u);setPassword('')}else setError('Invalid email or password.')}
     catch{setError('Sign-in unavailable.')}finally{setBusy(false)}
   }
-  if(user&&db)return <Workspace key={user.id} db={db} user={user} logout={()=>{setUser(null);setNormal(false);setEmail('');setPassword('');setError('')}}/>;
+  if(user&&db)return <Workspace key={user.id} db={db} user={user} logout={logout}/>;
   return <main className="login-screen"><section className="login-card">
     <div className="brand">schoolday</div><h1>{t("Sign in")}</h1>
     <label htmlFor="sample">{t("Sample user")}</label>
-    <select id="sample" value="" disabled={!db||busy} onChange={e=>{const u=db&&samples(db).find(p=>p.id===e.target.value);if(u){setError('');setUser(u)}}}>
+    <select id="sample" value="" disabled={!db||busy} onChange={e=>{const u=db&&samples(db).find(p=>p.id===e.target.value);if(u){setError('');remember(u)}}}>
       <option value="">{t("Select sample user")}</option>{db&&samples(db).map(u=><option key={u.id} value={u.id}>{u.name} — {translateRoles(lang,u.roles)}</option>)}
     </select>
     <button className="primary" disabled={!db||busy} onClick={()=>{setNormal(!normal);setError('')}}>{t(normal?'Hide login form':'Normal user login')}</button>

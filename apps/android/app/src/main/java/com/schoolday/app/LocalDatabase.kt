@@ -100,8 +100,10 @@ INSERT OR IGNORE INTO wall_posts VALUES('sample-post-7','admin','admin','Adminis
 INSERT OR IGNORE INTO wall_posts VALUES('sample-post-8','staff','teacher','Lesson resources are ready for the next meeting.',1795826220000);
 INSERT OR IGNORE INTO wall_comments VALUES('sample-comment-0','sample-post-4','class','student','Thank you, teacher.',1795826400000);
 INSERT OR IGNORE INTO wall_comments VALUES('sample-comment-1','sample-post-2','open','dual','I would be happy to help.',1795826460000);
-INSERT OR IGNORE INTO wall_reactions VALUES('sample-post-4','class','student');
-INSERT OR IGNORE INTO wall_reactions VALUES('sample-post-2','open','normal');
+CREATE TABLE IF NOT EXISTS seed_markers(id TEXT PRIMARY KEY);
+INSERT OR IGNORE INTO wall_reactions SELECT 'sample-post-4','class','student' WHERE NOT EXISTS(SELECT 1 FROM seed_markers WHERE id='timeline-v4');
+INSERT OR IGNORE INTO wall_reactions SELECT 'sample-post-2','open','normal' WHERE NOT EXISTS(SELECT 1 FROM seed_markers WHERE id='timeline-v4');
+INSERT OR IGNORE INTO seed_markers VALUES('timeline-v4');
         """.trimIndent()
         migration.split(";").map{it.trim()}.filter{it.isNotEmpty()}.forEach{db.execSQL(it)}
     }
@@ -135,6 +137,7 @@ UPDATE users SET name='Kavitha Devi' WHERE id='normal' AND name='Normal User';
         buildList{while(cursor.moveToNext())add((0 until cursor.columnCount).map{cursor.getString(it)?:""})}
     }
     private val users="SELECT u.id,u.name,u.email,(SELECT group_concat(role,' + ') FROM (SELECT role FROM roles WHERE user_id=u.id ORDER BY role)) FROM users u"
+    fun accountById(id:String)=rows(users+" WHERE id=?",id).firstOrNull()?.let{Account(it[0],it[1],it[2],it[3])}
     fun samples()=rows(users+" WHERE sample=1 ORDER BY rowid").map{Account(it[0],it[1],it[2],it[3])}
     fun login(email:String,password:String):Account?{
         val row=rows("SELECT id,salt,password_hash FROM users WHERE sample=0 AND email=?",email.trim().lowercase()).firstOrNull()?:return null
