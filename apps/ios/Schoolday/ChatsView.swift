@@ -62,6 +62,7 @@ private struct Workspace:View {
     let user:Account
     @AppStorage private var lang:String
     @AppStorage private var country:String
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @State private var category="Connect"
     @State private var moduleId="Chats"
     @State private var record=""
@@ -87,24 +88,24 @@ private struct Workspace:View {
     @State private var error=false
     var body:some View {
         GeometryReader{ geo in
-            let wide=geo.size.width>=768
+            let wide=geo.size.width>=768 && verticalSizeClass != .compact
             HStack(spacing:0){
-                if wide || !opened {sidebar.frame(width:wide ? min(max(geo.size.width*0.30,250),390):geo.size.width)}
+                if wide || !opened {sidebar(wide:wide).frame(width:wide ? min(max(geo.size.width*0.30,250),390):geo.size.width)}
                 if wide{Divider()}
                 if wide || opened{if tab=="Chats"{chat(wide:wide)}else{detail(wide:wide)}}
-            }
+            }.onChange(of:wide,initial:true){_,isWide in if isWide{opened=true}}
         }.task{
-            do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if let first=spaces.first{select(first.id,open:false)}}catch{self.error=true}
+            do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if selected.isEmpty,let first=spaces.first{selected=first.id}}catch{self.error=true}
         }
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
     }
-    private var sidebar:some View {
+    private func sidebar(wide:Bool)->some View {
         VStack(alignment:.leading,spacing:0){
             HStack{Text("schoolday").font(.system(size:26,weight:.bold,design:.serif)).italic();Spacer();Button(t("Logout"),action:logout)}.padding()
             Divider()
             ScrollView{
                 VStack(alignment:.leading,spacing:8){
-                    Picker(category,selection:$moduleId){ForEach(SchoolModules.visible(category,user.roles)){m in Text(m.title+(m.status=="local" ? "":" · "+(m.status=="partial" ? "Partial":"Not implemented"))).tag(m.id)}}.onChange(of:moduleId){_,_ in record="";opened=false}
+                    Picker(category,selection:$moduleId){ForEach(SchoolModules.visible(category,user.roles)){m in Text(m.title+(m.status=="local" ? "":" · "+(m.status=="partial" ? "Partial":"Not implemented"))).tag(m.id)}}.onChange(of:moduleId){_,_ in record="";opened=wide}
                     VStack(alignment:.leading){Text(module.title).font(.headline);if module.status != "local"{Text(module.status=="partial" ? "Partially implemented":"Not implemented").font(.caption).foregroundStyle(.red)}}.frame(maxWidth:.infinity,alignment:.leading).padding(8).overlay(alignment:.top){if module.status != "local"{Rectangle().fill(Color.red).frame(height:3)}}
                     if tab=="Chats"{ForEach(spaces){space in Button{select(space.id,open:true)}label:{HStack{Text(t(space.title));Spacer();Image(systemName:"chevron.right")}.padding().background(selected==space.id ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain);Divider()}}
                     else if kind != nil && staff {Button("+ "+t("Create draft")){record="";opened=true}.padding(8);if drafts.isEmpty{Text(t("No drafts yet")).font(.caption)};ForEach(drafts,id:\.self){r in Button{record=r[0];opened=true}label:{VStack(alignment:.leading){Text(r[1]).font(.headline);Text(r[2]).font(.caption).lineLimit(2);Text(t("Draft only · Not published")).font(.caption2)}.frame(maxWidth:.infinity,alignment:.leading).padding(8).background(record==r[0] ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain)}}
@@ -115,7 +116,7 @@ private struct Workspace:View {
             Divider()
             HStack(spacing:0){
                 ForEach(Array(tabs.enumerated()),id:\.offset){entry in
-                    Button{category=entry.element;moduleId=SchoolModules.visible(category,user.roles)[0].id;record="";opened=false}label:{VStack(spacing:4){Image(systemName:["bubble.left","book","building.2","rosette","person.crop.circle"][entry.offset]).font(.system(size:19));Text(t(entry.element)).font(.system(size:9)).lineLimit(2).multilineTextAlignment(.center)}.frame(maxWidth:.infinity,minHeight:48).foregroundStyle(tab==entry.element ? Color.primary:Color.secondary)}.buttonStyle(.plain)
+                    Button{category=entry.element;moduleId=SchoolModules.visible(category,user.roles)[0].id;record="";opened=wide}label:{VStack(spacing:4){Image(systemName:["bubble.left","book","building.2","rosette","person.crop.circle"][entry.offset]).font(.system(size:19));Text(t(entry.element)).font(.caption2).lineLimit(2).multilineTextAlignment(.center)}.frame(maxWidth:.infinity,minHeight:48).foregroundStyle(category==entry.element ? Color.primary:Color.secondary)}.buttonStyle(.plain).accessibilityAddTraits(category==entry.element ? .isSelected:[])
                 }
             }.padding(.horizontal,4)
         }

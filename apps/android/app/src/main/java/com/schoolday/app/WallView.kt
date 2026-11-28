@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
@@ -20,7 +21,7 @@ private data class TimelineEntry(val id:String,val time:Long,val post:WallPost?=
  var posts by remember(channel){mutableStateOf(emptyList<WallPost>())}
  var messages by remember(channel){mutableStateOf(emptyList<SpaceMessage>())}
  val expanded=remember(channel){mutableStateMapOf<String,Boolean>()}
- var text by remember(channel){mutableStateOf("")}
+ var text by rememberSaveable(channel){mutableStateOf("")}
  val comments=remember(channel){mutableStateMapOf<String,String>()}
  var failed by remember(channel){mutableStateOf(false)}
  val scope=rememberCoroutineScope()

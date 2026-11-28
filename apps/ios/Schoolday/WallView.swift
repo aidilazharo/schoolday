@@ -33,7 +33,7 @@ struct WallView:View {
             Divider()
             HStack {
                 TextField(t("Message"),text:$text,axis:.vertical).lineLimit(1...6).textFieldStyle(.roundedBorder)
-                Button(t("Send")){act("post",text)}.buttonStyle(.borderedProminent).disabled(text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || text.count>2000)
+                Button(t("Send")){act("post",text)}.frame(minHeight:44).buttonStyle(.borderedProminent).disabled(text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || text.count>2000)
             }.padding()
         }.task(id:channel){reload()}
          .alert(t("Unable to save locally."),isPresented:$failed){Button(t("OK"),role:.cancel){}}
@@ -51,8 +51,8 @@ struct WallView:View {
             Text(post.body).fixedSize(horizontal:false,vertical:true)
             HStack{Text(Date(timeIntervalSince1970:Double(post.createdAt)/1000),style:.time);Text(t("Local only"))}.font(.caption2).foregroundStyle(.secondary)
             HStack(spacing:12){
-                Button{act("like","",post.id)}label:{Label(String(post.likes),systemImage:post.liked ? "heart.fill":"heart")}
-                Button{if expanded.contains(post.id){expanded.remove(post.id)}else{expanded.insert(post.id)}}label:{Label(t("Comments")+" ("+String(post.comments.count)+")",systemImage:"bubble.left")}
+                Button{act("like","",post.id)}label:{Label(String(post.likes),systemImage:post.liked ? "heart.fill":"heart").frame(minHeight:44)}
+                Button{if expanded.contains(post.id){expanded.remove(post.id)}else{expanded.insert(post.id)}}label:{Label(t("Comments")+" ("+String(post.comments.count)+")",systemImage:"bubble.left").frame(minHeight:44)}
             }.font(.caption).buttonStyle(.borderless)
             if expanded.contains(post.id){
                 ForEach(post.comments){comment in VStack(alignment:.leading){Text(comment.name).font(.caption.bold());Text(comment.body)}.padding(8).frame(maxWidth:.infinity,alignment:.leading).background(.background,in:RoundedRectangle(cornerRadius:8))}

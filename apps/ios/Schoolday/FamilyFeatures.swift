@@ -61,7 +61,10 @@ struct FamilyFeatures:View {
         let padded=renderer.image{ context in UIColor.white.setFill();context.fill(CGRect(origin:.zero,size:CGSize(width:image.size.width+64,height:image.size.height+64)));image.draw(at:CGPoint(x:32,y:32))}
         let controller=UIPrintInteractionController.shared
         controller.printingItem=padded
-        controller.present(animated:true,completionHandler:nil)
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            guard let scene=UIApplication.shared.connectedScenes.compactMap({$0 as? UIWindowScene}).first(where:{$0.activationState == .foregroundActive}),let view=scene.windows.first(where:{$0.isKeyWindow})?.rootViewController?.view else{feedback="Printing unavailable.";return}
+            controller.present(from:CGRect(x:view.bounds.midX,y:view.bounds.midY,width:1,height:1),in:view,animated:true,completionHandler:nil)
+        }else{controller.present(animated:true,completionHandler:nil)}
     }
     private func useCode(){
         let prefix="schoolday:identity:v1:"

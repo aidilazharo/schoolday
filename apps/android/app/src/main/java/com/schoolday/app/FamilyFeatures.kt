@@ -91,7 +91,7 @@ private object FeatureQuery {
   Text("10 points will be deducted. Balance: "+balance)
   Button(onClick={ask("Deduct 10 points?"){act("avatar","",0,choice)}},enabled=!busy&&choice!=current&&balance>=10){Text("Save avatar · 10 points")}
   HorizontalDivider();Text("QR identity",style=MaterialTheme.typography.titleMedium)
-  bitmap?.let{Image(it.asImageBitmap(),"Schoolday QR identity",Modifier.size(240.dp));Button(onClick={PrintHelper(context).apply{scaleMode=PrintHelper.SCALE_MODE_FIT}.printBitmap("Schoolday identity",it)}){Text("Print QR")}}
+  bitmap?.let{Image(it.asImageBitmap(),"Schoolday QR identity",Modifier.widthIn(max=240.dp).fillMaxWidth().aspectRatio(1f));Button(onClick={PrintHelper(context).apply{scaleMode=PrintHelper.SCALE_MODE_FIT}.printBitmap("Schoolday identity",it)}){Text("Print QR")}}
   Text("Local demo identifier, not proof of identity.")
   Button(onClick={clipboard.setText(AnnotatedString(payload))}){Text("Copy identity code")}
   FeaturePicker("Use identity",listOf("friend" to "Friend request","parent" to "Parent link request","attendance" to "Demo attendance"),purpose,{purpose=it})

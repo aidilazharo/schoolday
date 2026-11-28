@@ -11,7 +11,7 @@ export function Wall({db,user,channel,lang,busy,setBusy}:{db:Database;user:User;
  const [comments,setComments]=useState<Record<string,string>>({});
  const [error,setError]=useState(false);
  const end=useRef<HTMLDivElement>(null);
- useEffect(()=>{end.current?.scrollIntoView({block:'end'})},[posts.length,drafts.length]);
+ useEffect(()=>{const feed=end.current?.parentElement;if(feed)feed.scrollTop=feed.scrollHeight},[posts.length,drafts.length]);
  const items=[...posts.map(p=>({kind:'post' as const,id:'p:'+p.id,time:p.createdAt,p})),...drafts.map(m=>({kind:'draft' as const,id:'m:'+m.id,time:m.createdAt,m}))].sort((a,b)=>a.time-b.time||a.id.localeCompare(b.id));
  const time=(ms:number)=>new Date(ms).toLocaleTimeString(lang,{hour:'2-digit',minute:'2-digit'});
  async function act(action:'post'|'comment'|'like',body:string,id=''){

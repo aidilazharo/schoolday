@@ -4,6 +4,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -12,8 +13,8 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 @Composable fun WorkspaceEditor(db:LocalDatabase,user:Account,kind:String,lang:String,modifier:Modifier=Modifier,onSaved:()->Unit={}){
  fun t(key:String)=SchooldayLanguage.text(key,lang)
- var title by remember(kind){mutableStateOf("")}
- var details by remember(kind){mutableStateOf("")}
+ var title by rememberSaveable(kind){mutableStateOf("")}
+ var details by rememberSaveable(kind){mutableStateOf("")}
  var drafts by remember(kind){mutableStateOf(emptyList<List<String>>())}
  var busy by remember{mutableStateOf(false)}
  var failed by remember{mutableStateOf(false)}
