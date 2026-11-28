@@ -49,7 +49,10 @@ enum SchooldayLanguage {
 "Class 5A Wall":"Class 5A Wall",
 "Staff Room":"Staff Room",
 "Family Chat":"Family Chat",
-"School Administration":"School Administration" ],
+"School Administration":"School Administration",
+"Country / region":"Country / region",
+"Search country / region":"Search country / region",
+"Done":"Done"],
 "ms": ["Language":"Bahasa",
 "Sign in":"Log masuk",
 "Sample user":"Pengguna contoh",
@@ -97,7 +100,10 @@ enum SchooldayLanguage {
 "Class 5A Wall":"Dinding kelas 5A",
 "Staff Room":"Bilik guru",
 "Family Chat":"Sembang keluarga",
-"School Administration":"Pentadbiran sekolah" ],
+"School Administration":"Pentadbiran sekolah",
+"Country / region":"Negara / wilayah",
+"Search country / region":"Cari negara / wilayah",
+"Done":"Selesai"],
 "zh": ["Language":"语言",
 "Sign in":"登录",
 "Sample user":"示例用户",
@@ -145,7 +151,10 @@ enum SchooldayLanguage {
 "Class 5A Wall":"5A班交流区",
 "Staff Room":"教职员室",
 "Family Chat":"家庭聊天",
-"School Administration":"学校行政" ],
+"School Administration":"学校行政",
+"Country / region":"国家／地区",
+"Search country / region":"搜索国家／地区",
+"Done":"完成"],
 "ta": ["Language":"மொழி",
 "Sign in":"உள்நுழைக",
 "Sample user":"மாதிரி பயனர்",
@@ -193,7 +202,10 @@ enum SchooldayLanguage {
 "Class 5A Wall":"5A வகுப்புச் சுவர்",
 "Staff Room":"ஆசிரியர் அறை",
 "Family Chat":"குடும்ப அரட்டை",
-"School Administration":"பள்ளி நிர்வாகம்" ]]
+"School Administration":"பள்ளி நிர்வாகம்",
+"Country / region":"நாடு / பிராந்தியம்",
+"Search country / region":"நாடு / பிராந்தியத்தைத் தேடுக",
+"Done":"முடிந்தது"]]
     static func text(_ key:String,_ lang:String)->String {strings[lang]?[key] ?? key}
     static func roles(_ value:String,_ lang:String)->String {value.components(separatedBy:" + ").map{text($0,lang)}.joined(separator:" + ")}
 }
@@ -201,7 +213,7 @@ struct LanguageMenu: View {
     @Binding var language:String
     var body:some View {
         Menu {
-            ForEach(SchooldayLanguage.options,id: \.0){option in Button(option.1){language=option.0}}
+            ForEach(SchooldayLanguage.options.indices,id: \.self){index in let option=SchooldayLanguage.options[index];Button(option.1){language=option.0}}
         } label: {
             Label(SchooldayLanguage.options.first(where:{$0.0==language})?.1 ?? "Bahasa Melayu",systemImage:"globe")
         }.accessibilityLabel(SchooldayLanguage.text("Language",language))

@@ -37,6 +37,8 @@ class MainActivity:ComponentActivity(){
     val prefs=LocalContext.current.getSharedPreferences("schoolday.settings",0)
     var lang by remember{mutableStateOf(SchooldayLanguage.normalize(prefs.getString("language",null)))}
     fun setLang(value:String){lang=value;prefs.edit().putString("language",value).apply()}
+    var country by remember{mutableStateOf(SchooldayCountry.normalize(prefs.getString("country",null)))}
+    fun setCountry(value:String){country=value;prefs.edit().putString("country",value).apply()}
     fun t(key:String)=SchooldayLanguage.text(key,lang)
     var user by remember{mutableStateOf<Account?>(null)}
     var accounts by remember{mutableStateOf(emptyList<Account>())}
@@ -50,9 +52,10 @@ class MainActivity:ComponentActivity(){
     LaunchedEffect(db){try{accounts=withContext(Dispatchers.IO){db.samples()}}catch(e:Exception){error="Unable to open local database."}}
     val current=user
     Surface(Modifier.fillMaxSize()){
-        if(current!=null)key(current.id){Workspace(db,current,lang,::setLang){user=null;normal=false;email="";password="";error=""}}
+        if(current!=null)key(current.id){Workspace(db,current,lang,::setLang,country,::setCountry){user=null;normal=false;email="";password="";error=""}}
         else Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(24.dp),contentAlignment=Alignment.Center){
             Column(Modifier.widthIn(max=420.dp).fillMaxWidth().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)){
+                CountryMenu(country,lang,::setCountry)
                 LanguageMenu(lang,::setLang)
                 Text("schoolday",style=MaterialTheme.typography.headlineLarge,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic)
                 Text(t("Sign in"),style=MaterialTheme.typography.headlineSmall)
@@ -76,7 +79,7 @@ class MainActivity:ComponentActivity(){
         }
     }
 }
-@Composable private fun Workspace(db:LocalDatabase,user:Account,lang:String,setLang:(String)->Unit,logout:()->Unit){
+@Composable private fun Workspace(db:LocalDatabase,user:Account,lang:String,setLang:(String)->Unit,country:String,setCountry:(String)->Unit,logout:()->Unit){
     fun t(key:String)=SchooldayLanguage.text(key,lang)
     var spaces by remember{mutableStateOf(emptyList<ChatSpace>())}
     var selected by remember{mutableStateOf("")}
@@ -102,7 +105,7 @@ class MainActivity:ComponentActivity(){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
                     Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);Spacer(Modifier.weight(1f));TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
                     HorizontalDivider()
-                    Column(Modifier.padding(16.dp)){Text(user.name,fontWeight=FontWeight.Bold);Text(SchooldayLanguage.roles(user.roles,lang),style=MaterialTheme.typography.bodySmall);LanguageMenu(lang,setLang)}
+                    Column(Modifier.padding(16.dp)){Text(user.name,fontWeight=FontWeight.Bold);Text(SchooldayLanguage.roles(user.roles,lang),style=MaterialTheme.typography.bodySmall);LanguageMenu(lang,setLang);CountryMenu(country,lang,setCountry)}
                     HorizontalDivider()
                     Text(t("Chats"),style=MaterialTheme.typography.headlineSmall,modifier=Modifier.padding(16.dp))
                     LazyColumn{items(spaces,key={it.id}){space->

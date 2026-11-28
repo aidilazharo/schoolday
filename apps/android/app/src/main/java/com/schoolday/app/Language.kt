@@ -54,7 +54,10 @@ object SchooldayLanguage {
 "Class 5A Wall" to "Class 5A Wall",
 "Staff Room" to "Staff Room",
 "Family Chat" to "Family Chat",
-"School Administration" to "School Administration"),
+"School Administration" to "School Administration",
+"Country / region" to "Country / region",
+"Search country / region" to "Search country / region",
+"Done" to "Done"),
 "ms" to mapOf("Language" to "Bahasa",
 "Sign in" to "Log masuk",
 "Sample user" to "Pengguna contoh",
@@ -102,7 +105,10 @@ object SchooldayLanguage {
 "Class 5A Wall" to "Dinding kelas 5A",
 "Staff Room" to "Bilik guru",
 "Family Chat" to "Sembang keluarga",
-"School Administration" to "Pentadbiran sekolah"),
+"School Administration" to "Pentadbiran sekolah",
+"Country / region" to "Negara / wilayah",
+"Search country / region" to "Cari negara / wilayah",
+"Done" to "Selesai"),
 "zh" to mapOf("Language" to "语言",
 "Sign in" to "登录",
 "Sample user" to "示例用户",
@@ -150,7 +156,10 @@ object SchooldayLanguage {
 "Class 5A Wall" to "5A班交流区",
 "Staff Room" to "教职员室",
 "Family Chat" to "家庭聊天",
-"School Administration" to "学校行政"),
+"School Administration" to "学校行政",
+"Country / region" to "国家／地区",
+"Search country / region" to "搜索国家／地区",
+"Done" to "完成"),
 "ta" to mapOf("Language" to "மொழி",
 "Sign in" to "உள்நுழைக",
 "Sample user" to "மாதிரி பயனர்",
@@ -198,7 +207,10 @@ object SchooldayLanguage {
 "Class 5A Wall" to "5A வகுப்புச் சுவர்",
 "Staff Room" to "ஆசிரியர் அறை",
 "Family Chat" to "குடும்ப அரட்டை",
-"School Administration" to "பள்ளி நிர்வாகம்"))
+"School Administration" to "பள்ளி நிர்வாகம்",
+"Country / region" to "நாடு / பிராந்தியம்",
+"Search country / region" to "நாடு / பிராந்தியத்தைத் தேடுக",
+"Done" to "முடிந்தது"))
     fun text(key:String,lang:String)=strings[lang]?.get(key)?:key
     fun roles(value:String,lang:String)=value.split(" + ").joinToString(" + "){text(it,lang)}
     fun normalize(value:String?)=if(options.any{it.first==value}) value!! else "ms"

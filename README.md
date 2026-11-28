@@ -42,3 +42,7 @@ Reconstructed monochrome text-only branding from the previous Schoolday design r
 ## Languages
 
 Bahasa Melayu (default), English, Simplified Chinese and Tamil are available in the login and account sidebar. Preference is stored locally on each device, independent of account. Stable database roles/channel IDs and user-authored messages are not translated. Translation keys live in shared/translations; native and web dictionaries are embedded so the UI can switch offline. Other Malaysian languages may be added later.
+
+## Country and region
+
+Select any of 249 ISO 3166-1 countries and territories, default Malaysia (MY). Country names are localized by the platform where available. Preference is stored locally, separately from language and school memberships. Country selection does not verify residency, grant access, configure radio frequencies or implement country-specific legal rules. Native selectors support search; browser uses its standard select control.

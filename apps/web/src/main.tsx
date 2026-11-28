@@ -3,11 +3,19 @@ import {createRoot} from 'react-dom/client';
 import type {Database} from 'sql.js';
 import {openDatabase,samples,login,channels,drafts,write,type User,type Draft} from './database';
 import './style.css';
+import {countryOptions,savedCountry,saveCountry} from './countries';
 import {languages,translate,translateRoles,savedLanguage,saveLanguage,type Language} from './i18n';
 
 function LanguageSelect({lang,onChange}:{lang:Language;onChange:(lang:Language)=>void}){return <label className="language-select"><span>{translate(lang,'Language')}</span><select value={lang} onChange={e=>onChange(e.target.value as Language)}>{languages.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>}
 
+function CountrySelect({lang,country,onChange}:{lang:Language;country:string;onChange:(country:string)=>void}){
+ const options=countryOptions(lang);
+ return <label className="language-select country-select"><span>{translate(lang,'Country / region')}</span><select value={country} onChange={e=>onChange(e.target.value)}>{options.map(({code,name})=><option key={code} value={code}>{name} ({code})</option>)}</select></label>;
+}
+
 function App(){
+  const [country,setCountry]=useState(savedCountry);
+  useEffect(()=>{saveCountry(country)},[country]);
   const [lang,setLang]=useState<Language>(savedLanguage);
   const t=(key:string)=>translate(lang,key);
   useEffect(()=>{document.documentElement.lang=lang==='zh'?'zh-Hans':lang;saveLanguage(lang)},[lang]);
@@ -24,9 +32,9 @@ function App(){
     try{const u=await login(db,email,password);if(u){setUser(u);setPassword('')}else setError('Invalid email or password.')}
     catch{setError('Sign-in unavailable.')}finally{setBusy(false)}
   }
-  if(user&&db)return <Workspace key={user.id} db={db} user={user} lang={lang} setLang={setLang} logout={()=>{setUser(null);setNormal(false);setEmail('');setPassword('');setError('')}}/>;
+  if(user&&db)return <Workspace key={user.id} db={db} user={user} lang={lang} setLang={setLang} country={country} setCountry={setCountry} logout={()=>{setUser(null);setNormal(false);setEmail('');setPassword('');setError('')}}/>;
   return <main className="login-screen"><section className="login-card">
-    <LanguageSelect lang={lang} onChange={setLang}/><div className="brand">schoolday</div><h1>{t("Sign in")}</h1>
+    <LanguageSelect lang={lang} onChange={setLang}/><CountrySelect lang={lang} country={country} onChange={setCountry}/><div className="brand">schoolday</div><h1>{t("Sign in")}</h1>
     <label htmlFor="sample">{t("Sample user")}</label>
     <select id="sample" value="" disabled={!db||busy} onChange={e=>{const u=db&&samples(db).find(p=>p.id===e.target.value);if(u){setError('');setUser(u)}}}>
       <option value="">{t("Select sample user")}</option>{db&&samples(db).map(u=><option key={u.id} value={u.id}>{u.name} — {translateRoles(lang,u.roles)}</option>)}
@@ -36,7 +44,7 @@ function App(){
     <small>{t("Local test accounts only. Do not enter real credentials.")}</small>{error&&<p role="alert">{t(error)}</p>}
   </section></main>;
 }
-function Workspace({db,user,logout,lang,setLang}:{db:Database;user:User;logout:()=>void;lang:Language;setLang:(lang:Language)=>void}){
+function Workspace({db,user,logout,lang,setLang,country,setCountry}:{db:Database;user:User;logout:()=>void;lang:Language;setLang:(lang:Language)=>void;country:string;setCountry:(country:string)=>void}){
   const t=(key:string)=>translate(lang,key);
   const spaces=channels(db,user);
   const [selected,setSelected]=useState(spaces[0]?.id??'');
@@ -50,7 +58,7 @@ function Workspace({db,user,logout,lang,setLang}:{db:Database;user:User;logout:(
   async function change(value:string|null){if(busy)return;setBusy(true);setError('');try{await write(db,user,selected,value);setMessages(drafts(db,user,selected));if(value!==null)setText('')}catch{setError('Unable to save locally.')}finally{setBusy(false)}}
   return <main className={opened&&tab==='Chats'?'app chat-open':'app'}>
     <aside className="sidebar"><header><div className="brand">schoolday</div><button className="quiet" disabled={busy} onClick={logout}>{t("Logout")}</button></header>
-    <div className="profile"><strong>{user.name}</strong><small>{translateRoles(lang,user.roles)}</small><LanguageSelect lang={lang} onChange={setLang}/></div><h1>{t(tab)}</h1>
+    <div className="profile"><strong>{user.name}</strong><small>{translateRoles(lang,user.roles)}</small><LanguageSelect lang={lang} onChange={setLang}/><CountrySelect lang={lang} country={country} onChange={setCountry}/></div><h1>{t(tab)}</h1>
     {tab==='Chats'&&<div className="chat-list">
     {spaces.map(c=><button key={c.id} className={'chat-item '+(selected===c.id?'selected':'')} disabled={busy} onClick={()=>select(c.id)}><span className="avatar" aria-hidden="true">{t(c.title)[0]}</span><span className="chat-label"><strong>{t(c.title)}</strong><small>{t("Local only")}</small></span><span className="chevron">›</span></button>)}</div>}
     {tab!=='Chats'&&<div className="section-summary">{tab==='Profile'?<><strong>{user.name}</strong><p>{user.email}</p><p>{translateRoles(lang,user.roles)}</p></>:<p>{t(tab==='Calendar'?'No events available.':tab==='Quiz'?'No quizzes available.':'No rewards available.')}</p>}</div>}
