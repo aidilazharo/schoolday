@@ -173,6 +173,9 @@ INSERT OR IGNORE INTO identity_tokens VALUES('university',lower(hex(randomblob(1
 INSERT OR IGNORE INTO space_messages VALUES('uni-welcome','university','university','Hello everyone! Looking forward to the new semester.',1795827720000);
 INSERT OR IGNORE INTO wall_posts VALUES('chat:uni-welcome','university','university','Hello everyone! Looking forward to the new semester.',1795827720000);
 INSERT OR IGNORE INTO wall_posts VALUES('uni-course-post','uni-course','university','Let us discuss our research proposal and assignment.',1795827780000);
+INSERT OR IGNORE INTO channels VALUES('secondary','SMK Cyberjaya',8);
+INSERT OR IGNORE INTO memberships VALUES('child15','secondary'),('parent','secondary'),('dual','secondary');
+INSERT OR IGNORE INTO wall_posts VALUES('secondary-welcome','secondary','child15','Welcome to our secondary school group!',1795827900000);
 """
         guard sqlite3_exec(db, schema, nil, nil, nil) == SQLITE_OK else { sqlite3_close(db); db=nil; throw Failure.database }
     }

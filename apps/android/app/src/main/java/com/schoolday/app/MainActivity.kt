@@ -132,7 +132,7 @@ class MainActivity:ComponentActivity(){
                     HorizontalDivider()
                     LazyColumn(Modifier.weight(1f)){
                         if(tab!="Chats")item{Column(Modifier.fillMaxWidth()){Text(module.title,modifier=Modifier.padding(12.dp),fontWeight=FontWeight.Bold);if(module.status!="local")Text(if(module.status=="partial")"Partially implemented" else "Not implemented",modifier=Modifier.padding(horizontal=12.dp),color=androidx.compose.ui.graphics.Color.Red)}}
-                        if(tab=="Chats"){items(spaces,key={it.id}){space->TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")};HorizontalDivider()}}
+                        if(tab=="Chats"){items(spaces,key={it.id}){space->TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){GroupAvatar(space.id,GroupBrand.title(space.id,t(space.title)));Text(GroupBrand.title(space.id,t(space.title)),modifier=Modifier.weight(1f).padding(8.dp));Text("›")};HorizontalDivider()}}
                         else if(kind!=null&&staff){item{TextButton(onClick={record="";opened=true}){Text("+ "+t("Create draft"))}};if(drafts.isEmpty())item{Text(t("No drafts yet"),modifier=Modifier.padding(12.dp))};items(drafts,key={it[0]}){r->TextButton(onClick={record=r[0];opened=true},modifier=Modifier.fillMaxWidth()){Column(Modifier.weight(1f)){Text(r[1],fontWeight=FontWeight.Bold);Text(r[2],maxLines=2,style=MaterialTheme.typography.bodySmall);Text(t("Draft only · Not published"),style=MaterialTheme.typography.labelSmall)}}}}
                         else if(module.records.isNotEmpty()){items(module.records,key={it}){r->TextButton(onClick={record=r;opened=true},modifier=Modifier.fillMaxWidth()){Column(Modifier.weight(1f)){Text(r);Text("Sample preview",style=MaterialTheme.typography.labelSmall)}}}}
                         else item{TextButton(onClick={opened=true}){Text(module.title+" ›")}}
@@ -148,8 +148,9 @@ class MainActivity:ComponentActivity(){
             if(wide||opened){
                 Column(Modifier.weight(1f).fillMaxHeight()){
                     Row(Modifier.fillMaxWidth().heightIn(min=66.dp).then(if(wide)Modifier.height(66.dp) else Modifier).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){
+                        if(tab=="Chats"){GroupAvatar(selected,GroupBrand.title(selected,t(spaces.firstOrNull{it.id==selected}?.title?:"Chats")),36.dp);Spacer(Modifier.width(8.dp))}
                         Column(if(wide)Modifier.widthIn(min=80.dp,max=150.dp) else Modifier.weight(1f)){
-                            Text(t(if(tab=="Chats")spaces.firstOrNull{it.id==selected}?.title?:"Chats" else module.title),fontWeight=FontWeight.Bold,maxLines=2)
+                            Text(if(tab=="Chats")GroupBrand.title(selected,t(spaces.firstOrNull{it.id==selected}?.title?:"Chats")) else t(module.title),fontWeight=FontWeight.Bold,maxLines=2)
                             if(tab=="Chats")Text(t("Local only"),style=MaterialTheme.typography.bodySmall)
                         }
                         if(wide){Box(Modifier.weight(1f)){key(category){ModuleToolbar(SchoolModules.visible(category,user.roles,minor),moduleId,lang,busy){m->moduleId=m.id;record="";choosing=false;opened=true}}}}
@@ -158,7 +159,7 @@ class MainActivity:ComponentActivity(){
                     }
                     HorizontalDivider()
                     if(module.status!="local")Text(if(module.status=="partial")"Partially implemented" else "Not implemented",modifier=Modifier.padding(8.dp),color=Color(0xFFC62828))
-                    if(tab=="Chats"){if(selected.isNotEmpty())key(selected){if(groupOpen)GroupSettings(db,user,selected,t(spaces.firstOrNull{it.id==selected}?.title?:"Chats"),lang,Modifier.weight(1f)){groupOpen=false}else chatState.SaveableStateProvider(selected){WallView(db,user,selected,lang,busy,{busy=it},Modifier.weight(1f))}}}
+                    if(tab=="Chats"){if(selected.isNotEmpty())key(selected){if(groupOpen)GroupSettings(db,user,selected,GroupBrand.title(selected,t(spaces.firstOrNull{it.id==selected}?.title?:"Chats")),lang,Modifier.weight(1f)){groupOpen=false}else chatState.SaveableStateProvider(selected){WallView(db,user,selected,lang,busy,{busy=it},Modifier.weight(1f))}}}
                     else if(kind!=null&&staff){val picked=drafts.firstOrNull{it[0]==record};if(picked!=null){Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp)){Text(picked[1],style=MaterialTheme.typography.headlineSmall);Text(picked[2]);Text(t("Draft only · Not published"));Button(onClick={record=""}){Text(t("Create draft"))}}}else key(tab){WorkspaceEditor(db,user,kind,lang,Modifier.weight(1f)){revision++}}}
                     else if(tab=="Profile")Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp),verticalArrangement=Arrangement.spacedBy(12.dp)){
                     Text(t("Full name"),style=MaterialTheme.typography.bodySmall)

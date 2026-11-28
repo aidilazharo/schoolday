@@ -14,6 +14,7 @@ try{
   const page=await browser.newPage({viewport:{width,height}});await page.goto(url);
   await page.waitForFunction(()=>{const e=document.querySelector('#sample');return e&&!e.disabled&&e.options.length>1});await page.locator('#sample').selectOption('student');
   await page.locator('.module-nav .chat-item').first().waitFor({state:'visible'});
+  const schoolLogo=page.locator('.chat-item').filter({hasText:'SK Cyberjaya'}).locator('img');assert.equal(await schoolLogo.count(),1);assert.ok(await schoolLogo.evaluate(img=>img.complete&&img.naturalWidth===80&&img.naturalHeight===80));
   const wide=width>=768&&height>=480;
   assert.equal(await page.locator('.module-icon-nav:visible').count(),0);
   assert.equal(await page.locator('.workspace-tools [data-module=Classroom]').isVisible(),wide);
@@ -51,6 +52,7 @@ try{
   if(wide){await page.setViewportSize({width:390,height:844});assert.ok(await page.locator('.chat-panel').isVisible(),name+' resize preserves detail');assert.ok(!(await page.locator('.sidebar').isVisible()));}
   await page.close();
  }
- const uni=await browser.newPage({viewport:{width:1440,height:900}});await uni.goto(url);await uni.locator('#sample option[value=university]').waitFor({state:'attached'});await uni.locator('#sample').selectOption('university');await uni.locator('.module-nav .chat-item').first().waitFor({state:'visible'});assert.equal(await uni.locator('.module-nav .chat-item').count(),3);await uni.locator('.footer-nav button').nth(1).click();assert.equal(await uni.locator('.workspace-tools [data-module=Gate]').count(),0);await uni.close();
+ const uni=await browser.newPage({viewport:{width:1440,height:900}});await uni.goto(url);await uni.locator('#sample option[value=university]').waitFor({state:'attached'});await uni.locator('#sample').selectOption('university');await uni.locator('.module-nav .chat-item').first().waitFor({state:'visible'});assert.equal(await uni.locator('.module-nav .chat-item').count(),3);assert.ok(await uni.locator('.chat-item').filter({hasText:'Universiti Malaya'}).locator('img').evaluate(img=>img.complete&&img.naturalWidth===80));await uni.locator('.footer-nav button').nth(1).click();assert.equal(await uni.locator('.workspace-tools [data-module=Gate]').count(),0);await uni.close();
+ const secondary=await browser.newPage({viewport:{width:390,height:844}});await secondary.goto(url);await secondary.locator('#sample option[value=child15]').waitFor({state:'attached'});await secondary.locator('#sample').selectOption('child15');const secondaryLogo=secondary.locator('.chat-item').filter({hasText:'SMK Cyberjaya'}).locator('img');await secondaryLogo.waitFor({state:'visible'});assert.ok(await secondaryLogo.evaluate(img=>img.complete&&img.naturalWidth===80));await secondary.close();
  console.log('Responsive smoke checks passed for '+sizes.length+' viewports');
 }finally{await browser?.close();server.kill()}

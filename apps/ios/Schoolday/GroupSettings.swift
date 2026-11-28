@@ -26,7 +26,7 @@ struct GroupSettings:View{
 ["safety","Report & moderation","Member or message reference;Reason","Submit report"],
 ["archive","Archive group","Reason","Archive group"],
 ["leave","Leave group","Reason (optional)","Leave group"]]
- private let policies:[String:String]=["open":"Community election with independent safety oversight","school":"Institution-appointed administrator","class":"Assigned educator; representatives may be elected","staff":"Institution-appointed administrator","family":"Verified family permissions","admin":"Institution-appointed administrator","university":"Institution-appointed administrator","uni-course":"Assigned lecturer; representatives may be elected"]
+ private let policies:[String:String]=["open":"Community election with independent safety oversight","secondary":"Institution-appointed administrator","school":"Institution-appointed administrator","class":"Assigned educator; representatives may be elected","staff":"Institution-appointed administrator","family":"Verified family permissions","admin":"Institution-appointed administrator","university":"Institution-appointed administrator","uni-course":"Assigned lecturer; representatives may be elected"]
  private let permissions=["Send messages","Invite members","Edit group information","Remove members","Create polls","Start group video call"]
  private let actions=["Remove member","Ban member","Temporarily mute","Assign moderator","Restore membership"]
  @State private var section=""
@@ -63,7 +63,7 @@ struct GroupSettings:View{
  }
  private var menu:some View{
   ScrollView{LazyVStack(alignment:.leading,spacing:0){
-   Text(title).font(.headline).padding(12)
+   HStack{GroupAvatar(channel:channel,title:title,size:56);Text(title).font(.headline)}.padding(12)
    Text(policies[channel] ?? "Institution or group policy determines authority").font(.caption).padding(.horizontal,12).padding(.bottom,12)
    ForEach(sections,id:\.self){r in
     Button{choose(r[0])}label:{HStack{Text(r[1]);Spacer();Image(systemName:"chevron.right").font(.caption)}.padding(12).frame(minHeight:48).background(section==r[0] ? Color.primary.opacity(0.07):Color.clear).overlay(alignment:.top){if r[0] != "members"{Rectangle().fill(.red).frame(height:2)}}}.buttonStyle(.plain)

@@ -40,7 +40,7 @@ listOf("activity","Activity log","",""),
 listOf("safety","Report & moderation","Member or message reference;Reason","Submit report"),
 listOf("archive","Archive group","Reason","Archive group"),
 listOf("leave","Leave group","Reason (optional)","Leave group"))
-private val groupPolicies=mapOf("open" to "Community election with independent safety oversight","school" to "Institution-appointed administrator","class" to "Assigned educator; representatives may be elected","staff" to "Institution-appointed administrator","family" to "Verified family permissions","admin" to "Institution-appointed administrator","university" to "Institution-appointed administrator","uni-course" to "Assigned lecturer; representatives may be elected")
+private val groupPolicies=mapOf("open" to "Community election with independent safety oversight","secondary" to "Institution-appointed administrator","school" to "Institution-appointed administrator","class" to "Assigned educator; representatives may be elected","staff" to "Institution-appointed administrator","family" to "Verified family permissions","admin" to "Institution-appointed administrator","university" to "Institution-appointed administrator","uni-course" to "Assigned lecturer; representatives may be elected")
 private val groupPermissions=listOf("Send messages","Invite members","Edit group information","Remove members","Create polls","Start group video call")
 private val groupActions=listOf("Remove member","Ban member","Temporarily mute","Assign moderator","Restore membership")
 @Composable fun GroupSettings(db:LocalDatabase,user:Account,channel:String,title:String,lang:String,modifier:Modifier=Modifier,onClose:()->Unit){
@@ -71,7 +71,7 @@ private val groupActions=listOf("Remove member","Ban member","Temporarily mute",
    Row(Modifier.fillMaxSize()){
     if(split||section.isEmpty()){
      LazyColumn(if(split)Modifier.width((maxWidth*0.34f).coerceAtMost(250.dp)).fillMaxHeight() else Modifier.fillMaxSize()){
-      item{Column(Modifier.padding(12.dp)){Text(title,fontWeight=FontWeight.Bold);Text(groupPolicies[channel]?:"Institution or group policy determines authority",style=MaterialTheme.typography.labelSmall)}}
+      item{Column(Modifier.padding(12.dp)){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){GroupAvatar(channel,title,56.dp);Text(title,fontWeight=FontWeight.Bold)};Text(groupPolicies[channel]?:"Institution or group policy determines authority",style=MaterialTheme.typography.labelSmall)}}
       items(groupSections,key={it[0]}){r->Column{if(r[0]!="members")HorizontalDivider(thickness=2.dp,color=Color(0xFFC62828));TextButton(onClick={choose(r[0])},modifier=Modifier.fillMaxWidth().background(if(section==r[0])Color(0xFFF0F0F0) else Color.White)){Text(r[1],modifier=Modifier.weight(1f));Text("›")};HorizontalDivider()}}
      }
     }

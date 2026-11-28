@@ -143,7 +143,7 @@ private struct Workspace:View {
             if tab=="Chats"{
                 ForEach(spaces){space in
                     Button{select(space.id,open:true)}label:{
-                        HStack{Text(t(space.title));Spacer();Image(systemName:"chevron.right")}
+                        HStack(spacing:10){GroupAvatar(channel:space.id,title:GroupBrand.title(space.id,t(space.title)));Text(GroupBrand.title(space.id,t(space.title)));Spacer();Image(systemName:"chevron.right")}
                             .padding().background(selected==space.id ? Color.primary.opacity(0.06):Color.clear)
                     }.buttonStyle(.plain)
                     Divider()
@@ -216,9 +216,10 @@ private struct Workspace:View {
     private func workspace(wide:Bool)->some View{
         VStack(spacing:0){
             if wide{
-                HStack(spacing:12){
+                HStack(spacing:8){
+                    if tab=="Chats"{GroupAvatar(channel:selected,title:GroupBrand.title(selected,t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")),size:36)}
                     VStack(alignment:.leading,spacing:2){
-                        Text(tab=="Chats" ? t(spaces.first(where:{$0.id==selected})?.title ?? "Chats"):t(module.title)).font(.subheadline.bold()).lineLimit(2)
+                        Text(tab=="Chats" ? GroupBrand.title(selected,t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")):t(module.title)).font(.subheadline.bold()).lineLimit(2)
                         if tab=="Chats"{Text(t("Local only")).font(.caption2).foregroundStyle(.secondary)}
                     }.frame(minWidth:80,maxWidth:150,alignment:.leading)
                     moduleToolbar(SchoolModules.visible(category,user.roles,minor:minor),wide:true)
@@ -269,8 +270,8 @@ private struct Workspace:View {
     private func refreshPoints(){points=(try? db.points(user)) ?? points}
     private func chat(wide:Bool)->some View {
         VStack(spacing:0){
-            if !wide{HStack{VStack(alignment:.leading){Text(t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();groupButton;Button(t("Back")){if groupOpen{groupOpen=false}else{opened=false}}}.padding();Divider()}
-            if !selected.isEmpty {ZStack{WallView(db:db,user:user,channel:selected,lang:lang).id(selected).opacity(groupOpen ? 0:1).allowsHitTesting(!groupOpen).accessibilityHidden(groupOpen);if groupOpen{GroupSettings(db:db,user:user,channel:selected,title:t(spaces.first(where:{$0.id==selected})?.title ?? "Chats"),lang:lang,onClose:{groupOpen=false}).id(selected)}}}
+            if !wide{HStack{GroupAvatar(channel:selected,title:GroupBrand.title(selected,t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")),size:36);VStack(alignment:.leading){Text(GroupBrand.title(selected,t(spaces.first(where:{$0.id==selected})?.title ?? "Chats"))).font(.headline);Text(t("Local only")).font(.caption).foregroundStyle(.secondary)};Spacer();groupButton;Button(t("Back")){if groupOpen{groupOpen=false}else{opened=false}}}.padding();Divider()}
+            if !selected.isEmpty {ZStack{WallView(db:db,user:user,channel:selected,lang:lang).id(selected).opacity(groupOpen ? 0:1).allowsHitTesting(!groupOpen).accessibilityHidden(groupOpen);if groupOpen{GroupSettings(db:db,user:user,channel:selected,title:GroupBrand.title(selected,t(spaces.first(where:{$0.id==selected})?.title ?? "Chats")),lang:lang,onClose:{groupOpen=false}).id(selected)}}}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
     private var groupButton:some View{Button{groupOpen.toggle()}label:{Image(systemName:"gearshape").frame(width:44,height:44)}.disabled(selected.isEmpty).accessibilityLabel(GroupSettings.label(lang))}
