@@ -52,3 +52,5 @@ Country and language controls are exclusively inside Profile. Signed-out screens
 ## Full names and nicknames
 
 Each provisioned account has a full name (fictional names in the demo), displayed at sign-in and in Profile. The nickname is selected only from one or two whitespace-separated parts of that registered name, preserving spelling and original order. A one-part full name is valid and offers that name only. A nickname defaults to the first part, can be changed in Profile and is stored per account in SQLite; arbitrary nicknames are rejected by the storage layer. The profile displays the full name separately. Existing account IDs, roles, drafts and preferences are unchanged by the idempotent seed migration. Real registration and identity verification are not implemented; full names are provisioned, not editable in this demo. Nicknames are local, not synced across devices.
+
+The chat list no longer displays the signed-in user's name or role above conversations. Profile remains available in web footer navigation and native header controls. Identity and permissions are unchanged.

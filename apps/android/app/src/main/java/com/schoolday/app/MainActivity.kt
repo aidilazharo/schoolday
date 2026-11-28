@@ -105,9 +105,7 @@ class MainActivity:ComponentActivity(){
         Row(Modifier.fillMaxSize()){
             if(wide||!opened){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
-                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);Spacer(Modifier.weight(1f));TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
-                    HorizontalDivider()
-                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text(displayName,fontWeight=FontWeight.Bold);Text(SchooldayLanguage.roles(user.roles,lang),style=MaterialTheme.typography.bodySmall)};TextButton(onClick={showProfile=true}){Text(t("Profile"))}}
+                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);TextButton(onClick={showProfile=true},enabled=!busy){Text(t("Profile"))};TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
                     HorizontalDivider()
                     Text(t("Chats"),style=MaterialTheme.typography.headlineSmall,modifier=Modifier.padding(16.dp))
                     LazyColumn{items(spaces,key={it.id}){space->

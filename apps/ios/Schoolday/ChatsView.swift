@@ -92,9 +92,7 @@ private struct Workspace:View {
     }
     private var sidebar:some View {
         VStack(alignment:.leading,spacing:0){
-            HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button(t("Logout"),action:logout)}.padding()
-            Divider()
-            Button {showProfile=true} label:{HStack{VStack(alignment:.leading){Text(displayName.isEmpty ? user.name : displayName).font(.headline);Text(SchooldayLanguage.roles(user.roles,lang)).font(.caption).foregroundStyle(.secondary)};Spacer();Label(t("Profile"),systemImage:"person.crop.circle")}}.buttonStyle(.plain).padding()
+            HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button {showProfile=true} label:{Image(systemName:"person.crop.circle").frame(minWidth:44,minHeight:44)}.accessibilityLabel(t("Profile"));Button(t("Logout"),action:logout)}.padding()
             Divider()
             Text(t("Chats")).font(.title2.bold()).padding()
             ScrollView{
