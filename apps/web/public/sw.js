@@ -1,5 +1,5 @@
 // Cache only this application's static shell. Never cache network messages or third-party requests.
-const CACHE = 'schoolday-shell-v28';
+const CACHE = 'schoolday-shell-v29';
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);

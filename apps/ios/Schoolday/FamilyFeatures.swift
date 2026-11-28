@@ -126,7 +126,9 @@ struct FamilyFeatures:View {
     }
     private var family:some View{
         Group{
-            if kids.isEmpty && rows(FeatureQuery.parents).isEmpty{Text("No linked family members.")}
+            let adults=rows("SELECT u.name FROM adult_family_demo f JOIN users u ON u.id=CASE WHEN f.parent_id=? THEN f.adult_id ELSE f.parent_id END WHERE f.parent_id=? OR f.adult_id=? ORDER BY u.name",[user.id,user.id,user.id])
+            if kids.isEmpty && rows(FeatureQuery.parents).isEmpty && adults.isEmpty{Text("No linked family members.")}
+            if !adults.isEmpty{Section("Adult family relationships"){ForEach(adults,id:\.self){r in VStack(alignment:.leading){Text(r[0]);Text("Consent not granted · Demo only").font(.caption);Text("No educational or parental access.").font(.caption)}}}}
             if !kids.isEmpty{Section("Linked children"){
                 ForEach(kids,id:\.self){c in VStack(alignment:.leading){Text(c[1]).font(.headline);Text("Age "+c[2]+" · "+c[3]+" points · "+(c[0]=="child15" ? "SMK Cyberjaya":"SK Cyberjaya")).font(.caption);if (Int(c[2]) ?? 18)<18{Toggle("Allow quiz skip · 5 points",isOn:Binding(get:{c[4]=="1"},set:{act("permission",c[0],$0 ? 1:0)}))}}}
             }}

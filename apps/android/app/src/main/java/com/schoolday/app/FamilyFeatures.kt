@@ -101,7 +101,9 @@ private object FeatureQuery {
   rows(FeatureQuery.requests,user.id,user.id,user.id).forEach{r->Text(r[4]+" · "+r[2]+" · "+r[3]);if(r[1]==user.id&&r[2]=="friend"&&r[3]=="pending")Button(onClick={act("accept",r[0])},enabled=!busy){Text("Accept")}}
  }
  if(screen=="Family"){
-  if(kids.isEmpty()&&rows(FeatureQuery.parents).isEmpty())Text("No linked family members.")
+  val adults=rows("SELECT u.name FROM adult_family_demo f JOIN users u ON u.id=CASE WHEN f.parent_id=? THEN f.adult_id ELSE f.parent_id END WHERE f.parent_id=? OR f.adult_id=? ORDER BY u.name",user.id,user.id,user.id)
+  if(kids.isEmpty()&&rows(FeatureQuery.parents).isEmpty()&&adults.isEmpty())Text("No linked family members.")
+  if(adults.isNotEmpty()){Text("Adult family relationships",style=MaterialTheme.typography.titleMedium);adults.forEach{r->Text(r[0]);Text("Consent not granted · Demo only");Text("No educational or parental access.")}}
   if(kids.isNotEmpty()){HorizontalDivider();Text("Linked children",style=MaterialTheme.typography.titleMedium);kids.forEach{c->Text(c[1]);Text("Age "+c[2]+" · "+c[3]+" points · "+(if(c[0]=="child15")"SMK Cyberjaya" else "SK Cyberjaya"));if((c[2].toIntOrNull()?:18)<18)Row{Checkbox(checked=c[4]=="1",onCheckedChange={act("permission",c[0],if(it)1 else 0)},enabled=!busy);Text("Allow quiz skip · 5 points",modifier=Modifier.padding(top=12.dp))}}}
   val parents=rows(FeatureQuery.parents);if(parents.isNotEmpty()){Text("Linked parents",style=MaterialTheme.typography.titleMedium);parents.forEach{Text(it[0])}}
  }
