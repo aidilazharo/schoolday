@@ -68,9 +68,10 @@ private val groupActions=listOf("Remove member","Ban member","Temporarily mute",
   if(failed)Text("Local database unavailable",color=MaterialTheme.colorScheme.error)
   BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()){
    val split=maxWidth>=620.dp
+   val menuWidth=(maxWidth*0.34f).coerceAtMost(250.dp)
    Row(Modifier.fillMaxSize()){
     if(split||section.isEmpty()){
-     LazyColumn(if(split)Modifier.width((maxWidth*0.34f).coerceAtMost(250.dp)).fillMaxHeight() else Modifier.fillMaxSize()){
+     LazyColumn(if(split)Modifier.width(menuWidth).fillMaxHeight() else Modifier.fillMaxSize()){
       item{Column(Modifier.padding(12.dp)){Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){GroupAvatar(channel,title,56.dp);Text(title,fontWeight=FontWeight.Bold)};Text(groupPolicies[channel]?:"Institution or group policy determines authority",style=MaterialTheme.typography.labelSmall)}}
       items(groupSections,key={it[0]}){r->Column{if(r[0]!="members")HorizontalDivider(thickness=2.dp,color=Color(0xFFC62828));TextButton(onClick={choose(r[0])},modifier=Modifier.fillMaxWidth().background(if(section==r[0])Color(0xFFF0F0F0) else Color.White)){Text(r[1],modifier=Modifier.weight(1f));Text("›")};HorizontalDivider()}}
      }
