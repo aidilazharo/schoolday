@@ -24,3 +24,7 @@ Changes to the versioned protocol and access rules must include positive/negativ
 4. School and class walls, profiles and multi-role relationships.
 5. FFMSP wallet, events, quizzes and governance.
 6. Security, interoperability, physical hardware and performance validation.
+
+## Adaptive layout
+
+Use compact single-pane navigation below 768 CSS px / pt / dp of available width; split view above that threshold. Web uses a wider sidebar from 1200 px. Test narrow phones, landscape, split-screen tablets, desktop resizing, keyboard and large text. Desktop support is via browser, not a separate desktop executable. Local draft storage is unchanged.

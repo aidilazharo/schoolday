@@ -3,6 +3,8 @@ package com.schoolday.app
 import android.os.Bundle
 import android.content.Context
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
@@ -51,27 +53,53 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun Chats(store: DraftStore) {
     var drafts by remember { mutableStateOf(store.load()) }
-    var text by remember { mutableStateOf("") }
+    var text by rememberSaveable { mutableStateOf("") }
+    var opened by rememberSaveable { mutableStateOf(false) }
     var confirm by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf(false) }
     Surface(modifier = Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding(), contentAlignment = Alignment.TopCenter) {
-            Column(Modifier.widthIn(max = 760.dp).fillMaxSize()) {
-                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("schoolday", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.weight(1f))
-                    Text("Local only", style = MaterialTheme.typography.labelSmall)
+        BoxWithConstraints(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
+            val wide = maxWidth >= 768.dp
+            val sidebarWidth = (maxWidth * 0.32f).coerceAtMost(420.dp)
+            BackHandler(enabled = !wide && opened) { opened = false }
+            Row(Modifier.fillMaxSize()) {
+                if (wide || !opened) {
+                    Column(if (wide) Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()) {
+                        Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text("schoolday", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.weight(1f))
+                            Text("Local only", style = MaterialTheme.typography.labelSmall)
+                        }
+                        HorizontalDivider()
+                        Text("Chats", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.padding(16.dp))
+                        TextButton(onClick = { opened = true }, modifier = Modifier.fillMaxWidth()) {
+                            Surface(shape = RoundedCornerShape(22.dp), color = Color(0xFFF1F1F1)) {
+                                Box(Modifier.size(44.dp), contentAlignment = Alignment.Center) { Text("S", fontWeight = FontWeight.Bold) }
+                            }
+                            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                                Text("Local outbox", fontWeight = FontWeight.Bold)
+                                Text(drafts.lastOrNull()?.text ?: "No saved messages", maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                        HorizontalDivider()
+                    }
+                }
+                if (wide) VerticalDivider()
+                if (wide || opened) {
+            Column(Modifier.weight(1f).fillMaxHeight()) {
+                Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Local outbox", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Local only", style = MaterialTheme.typography.labelSmall)
+                    }
+                    TextButton(onClick = { confirm = true }, enabled = drafts.isNotEmpty()) { Text("Clear") }
+                    if (!wide) TextButton(onClick = { opened = false }) { Text("Back") }
                 }
                 HorizontalDivider()
-                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Chats", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.weight(1f))
-                    TextButton(onClick = { confirm = true }, enabled = drafts.isNotEmpty()) { Text("Clear") }
-                }
                 if (drafts.isEmpty()) {
                     Box(Modifier.weight(1f).fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("No conversations yet", fontWeight = FontWeight.Bold)
+                            Text("No saved messages", fontWeight = FontWeight.Bold)
                             Text("Save a local test message below.", style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -96,6 +124,8 @@ private fun Chats(store: DraftStore) {
                         val next = drafts + Draft(UUID.randomUUID().toString(), text.trim())
                         if (store.save(next)) { drafts = next; text = "" } else error = true
                     }) { Text("Save") }
+                }
+            }
                 }
             }
         }
