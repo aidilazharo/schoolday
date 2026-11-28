@@ -38,3 +38,7 @@ All three clients use SQLite: system SQLite on mobile and sql.js (SQLite WASM) w
 ## Design restoration
 
 Reconstructed monochrome text-only branding from the previous Schoolday design requirements; original historic prototype and logo files are not present in this repository. The web test client restores the compact chat sidebar and outline footer navigation for Chats, Calendar, Quiz, Rewards and Profile. Calendar, Quiz and Rewards are empty states until their features are implemented. Native clients share the monochrome text-only wordmark and adaptive chat/login layouts. No images or exact prior custom font have been recovered.
+
+## Languages
+
+Bahasa Melayu (default), English, Simplified Chinese and Tamil are available in the login and account sidebar. Preference is stored locally on each device, independent of account. Stable database roles/channel IDs and user-authored messages are not translated. Translation keys live in shared/translations; native and web dictionaries are embedded so the UI can switch offline. Other Malaysian languages may be added later.
