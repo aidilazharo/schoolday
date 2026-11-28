@@ -124,11 +124,9 @@ class MainActivity:ComponentActivity(){
         Row(Modifier.fillMaxSize()){
             if(wide||!opened){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
-                    Row(Modifier.fillMaxWidth().height(66.dp).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);if(!wide)TextButton(onClick={choosing=!choosing},enabled=!busy,contentPadding=PaddingValues(2.dp)){Text(ModuleNavigation.label(category,lang)+" ▾",style=MaterialTheme.typography.labelSmall)};TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
+                    Row(Modifier.fillMaxWidth().height(66.dp).padding(horizontal=12.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",modifier=Modifier.weight(1f),maxLines=1,style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);if(!wide)TextButton(onClick={choosing=!choosing},enabled=!busy,contentPadding=PaddingValues(2.dp)){Text(ModuleNavigation.label(tab,lang)+" ▾",style=MaterialTheme.typography.labelSmall)};TextButton(onClick=logout,enabled=!busy){Text(t("Logout"))}}
                     HorizontalDivider()
-                    if(!wide&&choosing){Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(8.dp)){
-                        SchoolModules.visible(category,user.roles,minor).chunked(3).forEach{row->Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(4.dp)){row.forEach{m->ModuleTool(m,moduleId,lang,busy,Modifier.weight(1f)){moduleId=m.id;record="";choosing=false;opened=false}};repeat(3-row.size){Spacer(Modifier.weight(1f))}}}
-                    }}else LazyColumn(Modifier.weight(1f)){
+                    LazyColumn(Modifier.weight(1f)){
                         if(tab!="Chats")item{Column(Modifier.fillMaxWidth()){Text(module.title,modifier=Modifier.padding(12.dp),fontWeight=FontWeight.Bold);if(module.status!="local")Text(if(module.status=="partial")"Partially implemented" else "Not implemented",modifier=Modifier.padding(horizontal=12.dp),color=androidx.compose.ui.graphics.Color.Red)}}
                         if(tab=="Chats"){items(spaces,key={it.id}){space->TextButton(onClick={selected=space.id;opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(t(space.title),modifier=Modifier.weight(1f).padding(8.dp));Text("›")};HorizontalDivider()}}
                         else if(kind!=null&&staff){item{TextButton(onClick={record="";opened=true}){Text("+ "+t("Create draft"))}};if(drafts.isEmpty())item{Text(t("No drafts yet"),modifier=Modifier.padding(12.dp))};items(drafts,key={it[0]}){r->TextButton(onClick={record=r[0];opened=true},modifier=Modifier.fillMaxWidth()){Column(Modifier.weight(1f)){Text(r[1],fontWeight=FontWeight.Bold);Text(r[2],maxLines=2,style=MaterialTheme.typography.bodySmall);Text(t("Draft only · Not published"),style=MaterialTheme.typography.labelSmall)}}}}
@@ -186,6 +184,7 @@ class MainActivity:ComponentActivity(){
             }
         }
     }
+    if(choosing){MobileModuleSheet(SchoolModules.visible(category,user.roles,minor),category,moduleId,lang,busy,{choosing=false}){m->moduleId=m.id;record="";choosing=false;opened=false}}
     if(error)AlertDialog(onDismissRequest={error=false},title={Text(t("Local database unavailable"))},confirmButton={TextButton(onClick={error=false}){Text(t("OK"))}})
 }
 
@@ -201,6 +200,28 @@ class MainActivity:ComponentActivity(){
             if(m.status!="local")HorizontalDivider(thickness=3.dp,color=Color(0xFFC62828))else Spacer(Modifier.height(3.dp))
             ModuleIcon(m.id,if(active)Color(0xFF171717) else Color(0xFF666666))
             Text(ModuleNavigation.label(m.id,lang),style=MaterialTheme.typography.labelSmall,maxLines=2,fontWeight=if(active)FontWeight.Bold else FontWeight.Normal,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable private fun MobileModuleSheet(modules:List<SchoolModule>,category:String,moduleId:String,lang:String,busy:Boolean,onClose:()->Unit,onSelect:(SchoolModule)->Unit){
+    ModalBottomSheet(onDismissRequest=onClose,containerColor=Color.White,sheetState=rememberModalBottomSheetState(skipPartiallyExpanded=false)){
+        Column(Modifier.fillMaxWidth().padding(horizontal=16.dp)){
+            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){Text(ModuleNavigation.label(category,lang),modifier=Modifier.weight(1f),style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold);TextButton(onClick=onClose){Text("×",style=MaterialTheme.typography.titleLarge)}}
+            LazyColumn(Modifier.fillMaxWidth().heightIn(max=440.dp),contentPadding=PaddingValues(bottom=16.dp)){
+                items(modules,key={it.id}){m->
+                    val active=moduleId==m.id
+                    TextButton(onClick={onSelect(m)},enabled=!busy,modifier=Modifier.fillMaxWidth().heightIn(min=52.dp).background(if(active)Color(0xFFF0F0F0) else Color.White,RoundedCornerShape(8.dp)).semantics{selected=active;contentDescription=m.title+if(m.status=="local")"" else if(m.status=="partial")" · Partially implemented" else " · Not implemented"},contentPadding=PaddingValues(horizontal=12.dp,vertical=6.dp)){
+                        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){
+                            Column(horizontalAlignment=Alignment.CenterHorizontally){if(m.status!="local")HorizontalDivider(Modifier.width(22.dp),thickness=2.dp,color=Color(0xFFC62828))else Spacer(Modifier.height(2.dp));Spacer(Modifier.height(3.dp));ModuleIcon(m.id,Color(0xFF333333))}
+                            Text(ModuleNavigation.label(m.id,lang),modifier=Modifier.weight(1f),fontWeight=if(active)FontWeight.Bold else FontWeight.Normal)
+                            Text(if(active)"✓" else "›",color=Color(0xFF555555))
+                        }
+                    }
+                    HorizontalDivider(color=Color(0xFFF1F1F1))
+                }
+            }
         }
     }
 }

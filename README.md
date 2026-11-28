@@ -108,3 +108,7 @@ Wide layouts display the five primary categories as the only left footer and all
 ## University sample account
 
 Nur Alya Sofea, age 21, is a fictional university student sample with Student role, University Wall, Research Methodology and Open Wall memberships. SQLite migration v9 adds the sample without changing existing accounts or balances, seeds example discussions and a local QR identity. Adult students cannot see Quiz Unlock; the underlying policy/grant database guards also require minors. University academic workflows remain development previews; no real university enrolment is implied.
+
+## Mobile module picker
+
+Compact screens retain the record list and the single five-category footer. Tapping a category or current module label opens a dismissible bottom sheet with one module per row, a selected checkmark and red top marker on unfinished icons. The picker scrolls independently and closes on selection; on web it is a native modal dialog, iOS uses a sheet and Android uses Material3 ModalBottomSheet. Wide screens retain their aligned right header toolbar. Responsive checks exercise dismissal, reopening and selection at compact viewport sizes.

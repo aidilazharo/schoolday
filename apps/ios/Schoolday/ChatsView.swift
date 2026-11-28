@@ -99,6 +99,7 @@ private struct Workspace:View {
         }.task{
             do {displayName=try db.nickname(user);points=try db.points(user);spaces=try db.spaces(user);if selected.isEmpty,let first=spaces.first{selected=first.id}}catch{self.error=true}
         }
+        .sheet(isPresented:$choosing){moduleChooser.presentationDetents([.medium,.large]).presentationDragIndicator(.visible)}
         .alert(t("Local database unavailable"),isPresented:$error){Button(t("OK"),role:.cancel){}}
     }
     private func selectModule(_ m:SchoolModule,wide:Bool){
@@ -112,11 +113,11 @@ private struct Workspace:View {
             HStack{
                 Text("schoolday").font(.system(size:26,weight:.bold,design:.serif)).italic()
                 Spacer()
-                if !wide{Button(ModuleNavigation.label(category,lang)+" ▾"){choosing.toggle()}.font(.caption)}
+                if !wide{Button(ModuleNavigation.label(tab,lang)+" ▾"){choosing.toggle()}.font(.caption)}
                 Button(t("Logout"),action:logout)
             }.padding(.horizontal,12).frame(height:66)
             Divider()
-            ScrollView{if !wide && choosing{moduleChooser}else{recordList.padding(8)}}
+            ScrollView{recordList.padding(8)}
             Divider()
             categoryToolbar(wide:wide)
         }
@@ -158,11 +159,29 @@ private struct Workspace:View {
         }
     }
     private var moduleChooser:some View{
-        LazyVGrid(columns:[GridItem(.adaptive(minimum:84),spacing:8)],spacing:8){
-            ForEach(SchoolModules.visible(category,user.roles,minor:minor)){m in
-                ModuleToolButton(module:m,lang:lang,selected:moduleId==m.id){selectModule(m,wide:false)}
+        VStack(spacing:0){
+            HStack{Text(ModuleNavigation.label(category,lang)).font(.headline);Spacer();Button{choosing=false}label:{Image(systemName:"xmark").frame(width:44,height:44)}.accessibilityLabel(t("Close"))}.padding(.horizontal,16)
+            ScrollView{
+                LazyVStack(spacing:0){
+                    ForEach(SchoolModules.visible(category,user.roles,minor:minor)){m in
+                        Button{selectModule(m,wide:false)}label:{
+                            HStack(spacing:12){
+                                VStack(spacing:3){
+                                    Rectangle().fill(m.status=="local" ? Color.clear:Color.red).frame(width:22,height:2)
+                                    Image(systemName:ModuleNavigation.icon(m.id)).font(.system(size:20)).frame(width:24)
+                                }
+                                Text(ModuleNavigation.label(m.id,lang)).font(.body)
+                                Spacer()
+                                Image(systemName:moduleId==m.id ? "checkmark":"chevron.right").font(.caption)
+                            }.frame(minHeight:52).padding(.horizontal,12)
+                            .background(moduleId==m.id ? Color.primary.opacity(0.07):Color.clear,in:RoundedRectangle(cornerRadius:8))
+                            .contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityLabel(m.title+(m.status=="local" ? "":m.status=="partial" ? " · Partially implemented":" · Not implemented")).accessibilityAddTraits(moduleId==m.id ? .isSelected:[])
+                        Divider()
+                    }
+                }.padding(.horizontal,16)
             }
-        }.padding(8)
+        }.padding(.top,16)
     }
     private func moduleToolbar(_ modules:[SchoolModule],wide:Bool)->some View{
         ScrollView(.horizontal,showsIndicators:true){

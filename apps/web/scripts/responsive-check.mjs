@@ -25,11 +25,12 @@ try{
   await noOverflow(page,name);await page.screenshot({path:'responsive-screenshots/'+name+'-chat.png'});
   if(!wide)await page.locator('.chat-panel .back').click();
   await page.locator('.footer-nav button').nth(1).click();
-  const toolbar=wide?'.workspace-tools':'.module-grid';
+  const toolbar=wide?'.workspace-tools':'.module-list';
+  if(!wide){await page.locator('.mobile-module-sheet[open]').waitFor({state:'visible'});assert.ok(await page.locator('.record-list').isVisible(),name+' records retained behind picker');const sheet=await page.locator('.mobile-module-sheet').boundingBox();assert.ok(sheet.height<=height*.76+2,name+' sheet too tall');await page.keyboard.press('Escape');await page.locator('.mobile-module-sheet').waitFor({state:'hidden'});await page.locator('.mobile-modules').click();await page.locator('.mobile-module-sheet[open]').waitFor({state:'visible'});}
   assert.ok(await page.locator(toolbar+' [data-module=Gate]').evaluate(el=>el.classList.contains('unfinished-module')));
   await page.locator(toolbar+' [data-module=Quiz]').click();
   if(wide)assert.equal(await page.locator(toolbar+' [aria-current=page]').getAttribute('data-module'),'Quiz');
-  if(!wide)await page.locator('.module-nav .chat-item').first().click();
+  if(!wide){await page.locator('.mobile-module-sheet').waitFor({state:'hidden'});await page.locator('.module-nav .chat-item').first().click();}
   await page.locator('.quiz-card').first().waitFor({state:'visible'});
   assert.equal(await page.locator('.sidebar').isVisible(),wide);
   await noOverflow(page,name+' quiz');await page.screenshot({path:'responsive-screenshots/'+name+'-quiz.png'});
