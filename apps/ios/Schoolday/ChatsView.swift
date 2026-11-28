@@ -14,7 +14,7 @@ struct ChatsView: View {
             else {
                 ScrollView {
                     VStack(alignment:.leading,spacing:16){
-                        Text("schoolday").font(.largeTitle.bold())
+                        Text("schoolday").font(.system(size:44,weight:.bold,design:.serif)).italic()
                         Text("Sign in").font(.title2.bold())
                         Menu("Select sample user"){
                             ForEach(accounts){ account in Button("\(account.name) — \(account.roles)"){error="";user=account} }
@@ -66,7 +66,7 @@ private struct Workspace:View {
     }
     private var sidebar:some View {
         VStack(alignment:.leading,spacing:0){
-            HStack{Text("schoolday").font(.title.bold());Spacer();Button("Logout",action:logout)}.padding()
+            HStack{Text("schoolday").font(.system(size:28,weight:.bold,design:.serif)).italic();Spacer();Button("Logout",action:logout)}.padding()
             Divider()
             VStack(alignment:.leading){Text(user.name).font(.headline);Text(user.roles).font(.caption).foregroundStyle(.secondary)}.padding()
             Divider()

@@ -55,3 +55,19 @@ form button{background:#171717;color:white;border-radius:10px;padding:10px 16px}
 .login-form input{width:100%;flex:auto}.profile{padding:16px 20px;border-bottom:1px solid #eee}
 .chat-item.selected{background:#f1f1f1}.login-card [role=alert]{padding:0;margin:0}
 @media(max-width:480px){.login-screen{padding:16px;background:white}.login-card{border:0;padding:12px}}
+
+/* Reconstructed monochrome wordmark; text only, no book, frame or wood effects. */
+.brand{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:700;letter-spacing:-1.8px;color:#000}
+.login-card .brand{font-size:48px;line-height:1.2;align-self:center}
+.login-card{border-radius:12px}
+.chat-list{flex:1;min-height:0;overflow:auto}
+.chat-list .chat-item{width:100%;min-height:72px}
+.sidebar{overflow:hidden}
+.profile{flex-shrink:0}.sidebar h1{flex-shrink:0}
+.footer-nav{margin-top:auto;flex-shrink:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid #e5e5e5;padding:8px 2px max(8px,env(safe-area-inset-bottom));background:white}
+.footer-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#737373;background:white;font-size:10px;padding:5px 1px;min-width:0}
+.footer-nav button[aria-current=page]{color:#111;font-weight:700}
+.section-summary{flex:1;padding:20px;overflow:auto;overflow-wrap:anywhere;color:#555}
+.section-summary strong{color:#111}
+@media(min-width:768px){.footer-nav button{font-size:10px}}
+@media(min-width:1200px){.footer-nav button{font-size:12px}}

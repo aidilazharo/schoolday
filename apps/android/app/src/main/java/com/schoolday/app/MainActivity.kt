@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +48,7 @@ class MainActivity:ComponentActivity(){
         if(current!=null)key(current.id){Workspace(db,current){user=null;normal=false;email="";password="";error=""}}
         else Box(Modifier.fillMaxSize().safeDrawingPadding().imePadding().padding(24.dp),contentAlignment=Alignment.Center){
             Column(Modifier.widthIn(max=420.dp).fillMaxWidth().verticalScroll(rememberScrollState()),verticalArrangement=Arrangement.spacedBy(12.dp)){
-                Text("schoolday",style=MaterialTheme.typography.headlineLarge,fontWeight=FontWeight.Bold)
+                Text("schoolday",style=MaterialTheme.typography.headlineLarge,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic)
                 Text("Sign in",style=MaterialTheme.typography.headlineSmall)
                 Box{
                     OutlinedButton(onClick={menu=true},enabled=accounts.isNotEmpty()&&!busy,modifier=Modifier.fillMaxWidth()){Text("Select sample user ▾")}
@@ -77,9 +79,10 @@ class MainActivity:ComponentActivity(){
     var confirm by remember{mutableStateOf(false)}
     var error by remember{mutableStateOf(false)}
     var busy by remember{mutableStateOf(false)}
+    var loading by remember{mutableStateOf(true)}
     val scope=rememberCoroutineScope()
     LaunchedEffect(user.id){try{spaces=withContext(Dispatchers.IO){db.spaces(user)};selected=spaces.firstOrNull()?.id?:""}catch(e:Exception){error=true}}
-    LaunchedEffect(selected){if(selected.isNotEmpty())try{messages=withContext(Dispatchers.IO){db.drafts(user,selected)}}catch(e:Exception){error=true}}
+    LaunchedEffect(selected){if(selected.isNotEmpty()){loading=true;try{messages=withContext(Dispatchers.IO){db.drafts(user,selected)}}catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){error=true}finally{loading=false}}}
     fun change(value:String?){if(busy||selected.isEmpty())return;busy=true;val channel=selected
         scope.launch{try{messages=withContext(Dispatchers.IO){db.write(user,channel,value);db.drafts(user,channel)};if(value!=null)text=""}catch(e:Exception){error=true}finally{busy=false}}
     }
@@ -90,13 +93,13 @@ class MainActivity:ComponentActivity(){
         Row(Modifier.fillMaxSize()){
             if(wide||!opened){
                 Column(if(wide)Modifier.width(sidebarWidth).fillMaxHeight() else Modifier.fillMaxSize()){
-                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold);Spacer(Modifier.weight(1f));TextButton(onClick=logout,enabled=!busy){Text("Logout")}}
+                    Row(Modifier.fillMaxWidth().padding(16.dp),verticalAlignment=Alignment.CenterVertically){Text("schoolday",style=MaterialTheme.typography.headlineSmall,fontWeight=FontWeight.Bold,fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic);Spacer(Modifier.weight(1f));TextButton(onClick=logout,enabled=!busy){Text("Logout")}}
                     HorizontalDivider()
                     Column(Modifier.padding(16.dp)){Text(user.name,fontWeight=FontWeight.Bold);Text(user.roles,style=MaterialTheme.typography.bodySmall)}
                     HorizontalDivider()
                     Text("Chats",style=MaterialTheme.typography.headlineSmall,modifier=Modifier.padding(16.dp))
                     LazyColumn{items(spaces,key={it.id}){space->
-                        TextButton(onClick={selected=space.id;messages=emptyList();text="";opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(space.title,modifier=Modifier.weight(1f).padding(8.dp));Text("›")}
+                        TextButton(onClick={if(selected!=space.id){selected=space.id;messages=emptyList();text=""};opened=true},enabled=!busy,modifier=Modifier.fillMaxWidth()){Text(space.title,modifier=Modifier.weight(1f).padding(8.dp));Text("›")}
                         HorizontalDivider()
                     }}
                 }
@@ -117,7 +120,7 @@ class MainActivity:ComponentActivity(){
                     HorizontalDivider()
                     Row(Modifier.fillMaxWidth().padding(12.dp),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)){
                         OutlinedTextField(text,{text=it.take(500)},placeholder={Text("Message")},modifier=Modifier.weight(1f))
-                        Button(onClick={change(text.trim())},enabled=!busy&&selected.isNotEmpty()&&text.isNotBlank()){Text("Save")}
+                        Button(onClick={change(text.trim())},enabled=!busy&&!loading&&selected.isNotEmpty()&&text.isNotBlank()){Text("Save")}
                     }
                 }
             }
