@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.UUID
-@Composable fun WorkspaceEditor(db:LocalDatabase,user:Account,kind:String,lang:String,modifier:Modifier=Modifier){
+@Composable fun WorkspaceEditor(db:LocalDatabase,user:Account,kind:String,lang:String,modifier:Modifier=Modifier,onSaved:()->Unit={}){
  fun t(key:String)=SchooldayLanguage.text(key,lang)
  var title by remember(kind){mutableStateOf("")}
  var details by remember(kind){mutableStateOf("")}
@@ -25,10 +25,7 @@ import java.util.UUID
   Text(t("Draft only · Not published"))
   OutlinedTextField(title,{title=it.take(120)},label={Text(t("Title"))},modifier=Modifier.fillMaxWidth())
   OutlinedTextField(details,{details=it.take(4000)},label={Text(t(when(kind){"Quiz"->"Question and answer choices";"Certificates"->"Recipient and achievement";else->"Date, time and location"}))},modifier=Modifier.fillMaxWidth(),minLines=4)
-  Button(onClick={busy=true;val x=title.trim();val y=details.trim();scope.launch{try{drafts=withContext(Dispatchers.IO){db.writableDatabase.execSQL("INSERT INTO workspace_drafts VALUES(?,?,?,?,?,?)",arrayOf(UUID.randomUUID().toString(),user.id,kind,x,y,System.currentTimeMillis()));db.rows(query,user.id,kind)};title="";details=""}catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){failed=true}finally{busy=false}}},enabled=!busy&&title.isNotBlank()&&details.isNotBlank()){Text(t("Save draft"))}
-  HorizontalDivider();Text(t("My drafts"),style=MaterialTheme.typography.titleLarge)
-  if(drafts.isEmpty())Text(t("No drafts yet"))
-  drafts.forEach{r->OutlinedCard(Modifier.fillMaxWidth()){Column(Modifier.padding(12.dp)){Text(r[1],style=MaterialTheme.typography.titleMedium);Text(r[2]);Text(t("Draft only · Not published"),style=MaterialTheme.typography.labelSmall)}}}
+  Button(onClick={busy=true;val x=title.trim();val y=details.trim();scope.launch{try{drafts=withContext(Dispatchers.IO){db.writableDatabase.execSQL("INSERT INTO workspace_drafts VALUES(?,?,?,?,?,?)",arrayOf(UUID.randomUUID().toString(),user.id,kind,x,y,System.currentTimeMillis()));db.rows(query,user.id,kind)};title="";details="";onSaved()}catch(e:kotlinx.coroutines.CancellationException){throw e}catch(e:Exception){failed=true}finally{busy=false}}},enabled=!busy&&title.isNotBlank()&&details.isNotBlank()){Text(t("Save draft"))}
   if(failed)Text(t("Unable to save locally."),color=MaterialTheme.colorScheme.error)
  }
 }

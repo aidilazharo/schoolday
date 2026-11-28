@@ -4,6 +4,7 @@ struct WorkspaceEditor:View {
     let user:Account
     let kind:String
     let lang:String
+    var onSaved:()->Void = {}
     @State private var title=""
     @State private var details=""
     @State private var drafts:[[String]]=[]
@@ -19,12 +20,8 @@ struct WorkspaceEditor:View {
                 TextField(t(hint),text:$details,axis:.vertical).lineLimit(4...10)
                 Button(t("Save draft"),action:save).disabled(title.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || details.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty || title.count>120 || details.count>4000)
             }
-            Section(t("My drafts")){
-                if drafts.isEmpty{Text(t("No drafts yet"))}
-                ForEach(drafts,id:\.self){r in VStack(alignment:.leading){Text(r[1]).font(.headline);Text(r[2]);Text(t("Draft only · Not published")).font(.caption)}}
-            }
         }.task(id:kind){reload()}.alert(t("Unable to save locally."),isPresented:$failed){Button(t("OK"),role:.cancel){}}
     }
     private func reload(){do{drafts=try db.query("SELECT id,title,details FROM workspace_drafts WHERE owner_id=? AND kind=? ORDER BY created_at DESC,id",[user.id,kind])}catch{failed=true}}
-    private func save(){do{_=try db.query("INSERT INTO workspace_drafts VALUES(?,?,?,?,?,?)",[UUID().uuidString,user.id,kind,title.trimmingCharacters(in:.whitespacesAndNewlines),details.trimmingCharacters(in:.whitespacesAndNewlines),String(Int64(Date().timeIntervalSince1970*1000))]);title="";details="";reload()}catch{failed=true}}
+    private func save(){do{_=try db.query("INSERT INTO workspace_drafts VALUES(?,?,?,?,?,?)",[UUID().uuidString,user.id,kind,title.trimmingCharacters(in:.whitespacesAndNewlines),details.trimmingCharacters(in:.whitespacesAndNewlines),String(Int64(Date().timeIntervalSince1970*1000))]);title="";details="";reload();onSaved()}catch{failed=true}}
 }

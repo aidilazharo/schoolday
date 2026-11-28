@@ -62,10 +62,16 @@ private struct Workspace:View {
     let user:Account
     @AppStorage private var lang:String
     @AppStorage private var country:String
-    @State private var tab="Chats"
-    @State private var showDrafts=false
+    @State private var category="Connect"
+    @State private var moduleId="Chats"
+    @State private var record=""
+    @State private var revision=0
+    private var module:SchoolModule{SchoolModules.visible(category,user.roles).first(where:{$0.id==moduleId}) ?? SchoolModules.visible(category,user.roles)[0]}
+    private var tab:String{module.id}
+    private var kind:String?{tab=="QuizDraft" ? "Quiz":tab=="CertificateDraft" ? "Certificates":tab=="EventDraft" ? "Calendar":nil}
+    private var drafts:[[String]]{_ = revision; guard staff,let kind=kind else{return []};return (try? db.query("SELECT id,title,details FROM workspace_drafts WHERE owner_id=? AND kind=? ORDER BY created_at DESC,id",[user.id,kind])) ?? []}
     private var staff:Bool{user.roles.components(separatedBy:" + ").contains("Teacher") || user.roles.components(separatedBy:" + ").contains("School Admin")}
-    private let tabs=["Chats","Calendar","Quiz","Rewards","Certificates","Profile"]
+    private let tabs=SchoolModules.categories
     @State private var points=0
     @State private var displayName=""
     init(db:LocalDatabase,user:Account,logout:@escaping ()->Void){
@@ -97,32 +103,32 @@ private struct Workspace:View {
             HStack{Text("schoolday").font(.system(size:26,weight:.bold,design:.serif)).italic();Spacer();Button(t("Logout"),action:logout)}.padding()
             Divider()
             ScrollView{
-                if tab=="Chats"{
-                    ForEach(spaces){space in
-                        Button{select(space.id,open:true)}label:{HStack{Text(String(t(space.title).prefix(1))).font(.headline).frame(width:44,height:44).background(.thinMaterial,in:Circle());Text(t(space.title)).font(.headline);Spacer();Image(systemName:"chevron.right")}.padding().contentShape(Rectangle()).background(selected==space.id ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain)
-                        Divider()
-                    }
-                }else{
-                    Button{showDrafts=false;opened=true}label:{HStack{Text(t(tab=="Quiz" ? "My quizzes":tab=="Profile" ? "Personal information":tab));Spacer();Image(systemName:"chevron.right")}.padding().frame(maxWidth:.infinity,alignment:.leading).background(!showDrafts ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain)
-                    if staff && ["Quiz","Certificates","Calendar"].contains(tab){Button{showDrafts=true;opened=true}label:{HStack{Text(t("Create draft"));Spacer();Image(systemName:"chevron.right")}.padding().background(showDrafts ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain)}
-                }
+                VStack(alignment:.leading,spacing:8){
+                    Picker(category,selection:$moduleId){ForEach(SchoolModules.visible(category,user.roles)){m in Text(m.title+(m.status=="local" ? "":" · "+(m.status=="partial" ? "Partial":"Not implemented"))).tag(m.id)}}.onChange(of:moduleId){_,_ in record="";opened=false}
+                    VStack(alignment:.leading){Text(module.title).font(.headline);if module.status != "local"{Text(module.status=="partial" ? "Partially implemented":"Not implemented").font(.caption).foregroundStyle(.red)}}.frame(maxWidth:.infinity,alignment:.leading).padding(8).overlay(alignment:.top){if module.status != "local"{Rectangle().fill(Color.red).frame(height:3)}}
+                    if tab=="Chats"{ForEach(spaces){space in Button{select(space.id,open:true)}label:{HStack{Text(t(space.title));Spacer();Image(systemName:"chevron.right")}.padding().background(selected==space.id ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain);Divider()}}
+                    else if kind != nil && staff {Button("+ "+t("Create draft")){record="";opened=true}.padding(8);if drafts.isEmpty{Text(t("No drafts yet")).font(.caption)};ForEach(drafts,id:\.self){r in Button{record=r[0];opened=true}label:{VStack(alignment:.leading){Text(r[1]).font(.headline);Text(r[2]).font(.caption).lineLimit(2);Text(t("Draft only · Not published")).font(.caption2)}.frame(maxWidth:.infinity,alignment:.leading).padding(8).background(record==r[0] ? Color.primary.opacity(0.06):Color.clear)}.buttonStyle(.plain)}}
+                    else if !module.records.isEmpty{ForEach(module.records,id:\.self){r in Button{record=r;opened=true}label:{VStack(alignment:.leading){Text(r);Text("Sample preview").font(.caption)}.frame(maxWidth:.infinity,alignment:.leading).padding(8)}.buttonStyle(.plain)}}
+                    else{Button(module.title){opened=true}.padding(8)}
+                }.padding(8)
             }
             Divider()
             HStack(spacing:0){
                 ForEach(Array(tabs.enumerated()),id:\.offset){entry in
-                    Button{tab=entry.element;showDrafts=false;opened=false}label:{VStack(spacing:4){Image(systemName:["bubble.left","calendar","list.bullet.clipboard","star","rosette","person.crop.circle"][entry.offset]).font(.system(size:19));Text(t(entry.element)).font(.system(size:9)).lineLimit(2).multilineTextAlignment(.center)}.frame(maxWidth:.infinity,minHeight:48).foregroundStyle(tab==entry.element ? Color.primary:Color.secondary)}.buttonStyle(.plain)
+                    Button{category=entry.element;moduleId=SchoolModules.visible(category,user.roles)[0].id;record="";opened=false}label:{VStack(spacing:4){Image(systemName:["bubble.left","book","building.2","rosette","person.crop.circle"][entry.offset]).font(.system(size:19));Text(t(entry.element)).font(.system(size:9)).lineLimit(2).multilineTextAlignment(.center)}.frame(maxWidth:.infinity,minHeight:48).foregroundStyle(tab==entry.element ? Color.primary:Color.secondary)}.buttonStyle(.plain)
                 }
             }.padding(.horizontal,4)
         }
     }
     private func detail(wide:Bool)->some View{
         VStack(spacing:0){
-            HStack{Text(t(showDrafts ? "Create draft":tab)).font(.headline);Spacer();if !wide{Button(t("Back")){opened=false}}}.padding()
+            HStack{Text(module.title).font(.headline);Spacer();if !wide{Button(t("Back")){opened=false}}}.padding()
             Divider()
-            if showDrafts && staff && ["Quiz","Certificates","Calendar"].contains(tab){WorkspaceEditor(db:db,user:user,kind:tab,lang:lang).id(tab)}
+            if module.status != "local"{Rectangle().fill(Color.red).frame(height:3);Text(module.status=="partial" ? "Partially implemented":"Not implemented").font(.caption).foregroundStyle(.red).padding(6)}
+            if let kind=kind,staff{if let r=drafts.first(where:{$0[0]==record}){Form{Section(r[1]){Text(r[2]);Text(t("Draft only · Not published")).font(.caption);Button(t("Create draft")){record=""}}}}else{WorkspaceEditor(db:db,user:user,kind:kind,lang:lang,onSaved:{revision+=1}).id(tab)}}
             else if tab=="Profile"{profileView}
             else if tab=="Rewards" || tab=="Quiz"{Form{FamilyFeatures(db:db,user:user,screen:tab,onChange:refreshPoints)}.id(tab)}
-            else{Spacer();Text(t(tab=="Certificates" ? "No certificates available.":"No events available.")).foregroundStyle(.secondary);Spacer()}
+            else{ModulePreview(module:module,db:db,user:user,record:record).id(tab+record)}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
     private var nicknameMenu:some View {
@@ -160,5 +166,5 @@ private struct Workspace:View {
             if !selected.isEmpty {WallView(db:db,user:user,channel:selected,lang:lang).id(selected)}
         }.frame(maxWidth:.infinity,maxHeight:.infinity)
     }
-    private func select(_ id:String,open:Bool){tab="Chats";selected=id;if open{opened=true}}
+    private func select(_ id:String,open:Bool){category="Connect";moduleId="Chats";selected=id;if open{opened=true}}
 }
